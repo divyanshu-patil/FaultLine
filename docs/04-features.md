@@ -31,7 +31,7 @@ Each feature lists: purpose, how it works step by step, inputs/outputs, failure 
 
 **How it works**
 1. `/login` asks for an access code. Codes come from `ACCESS_CODES`. The Devpost testing instructions give judges one code.
-2. `POST /api/session {code}` compares in constant time, then sets an httpOnly, `SameSite=Lax`, `Secure` cookie `cct_session` (signed, 12 h). The browser reaches the API through the Next.js same-origin rewrite (ADR-015), so the cookie is first-party.
+2. `POST /api/session {code}` compares in constant time, then sets an httpOnly, `SameSite=Lax`, `Secure` cookie `fl_session` (signed, 12 h). The browser reaches the API through the Next.js same-origin rewrite (ADR-015), so the cookie is first-party.
 3. Every `/api/*` route except `/api/health`, `/api/session` and `GET /api/reports/:slug` requires the cookie.
 4. Rate limits: 5 login attempts / 10 min / IP; 6 runs / hour / session; 1 active run per session.
 
@@ -41,16 +41,16 @@ Each feature lists: purpose, how it works step by step, inputs/outputs, failure 
 
 ## F2. Targets
 
-**Purpose:** define what CCT may attack.
+**Purpose:** define what FaultLine may attack.
 
 **How it works**
 - **Built-in targets** (seeded): `buggybeans:demo` (bugs B1, B3, B4, B5, B7), `buggybeans:all` (B1–B8), `buggybeans:fixed` (none), `buggybeans:custom` (user picks bugs). Hosted mode allows only these.
 - **External targets** (self-host only, `ALLOW_EXTERNAL_TARGETS=true`), Should:
   1. User enters base URL, webhook path, probe path, and the source folder path for recon (local path or uploaded zip).
-  2. CCT issues a verification token. The user serves it at `<baseUrl>/.well-known/cct-verify.txt`.
+  2. FaultLine issues a verification token. The user serves it at `<baseUrl>/.well-known/faultline-verify.txt`.
   3. `POST /api/targets/:id/verify` fetches the token; on match the target is `verified`.
   4. The user configures their store per the target contract: `PAYPAL_API_BASE` → engine proxy URL, webhook URL on their sandbox app → engine `/hooks/paypal`, probe endpoint implemented.
-  5. Hosts resolving to private IP ranges are refused unless `CCT_MODE=selfhost` and the host is `localhost` (SSRF guard).
+  5. Hosts resolving to private IP ranges are refused unless `FAULTLINE_MODE=selfhost` and the host is `localhost` (SSRF guard).
 
 **Outputs:** `targets` row with `kind`, `status`, `bugs`, `contract` JSON.
 
@@ -76,10 +76,10 @@ Each feature lists: purpose, how it works step by step, inputs/outputs, failure 
 **Purpose:** give every attack and every patch verification a clean store.
 
 **How it works**
-1. `startInstance({bugs, patch?})` picks a free port from `INSTANCE_PORT_RANGE`, creates `SQLITE_PATH=/tmp/cct/<instanceId>.db`, and spawns `node apps/buggybeans/dist/server.js` with env (`docs/03` §5).
+1. `startInstance({bugs, patch?})` picks a free port from `INSTANCE_PORT_RANGE`, creates `SQLITE_PATH=/tmp/faultline/<instanceId>.db`, and spawns `node apps/buggybeans/dist/server.js` with env (`docs/03` §5).
 2. Waits for `GET /healthz` (timeout 15 s), then for `GET /__crashtest/state` with the probe token.
 3. Registers `instance_id → 127.0.0.1:<port>` in the proxy's instance table so `https://<engine>/i/<instanceId>/…` works.
-4. **Patched instance:** copies the **rendered variant source** (`docs/10` §6, the same source the model saw) to `/tmp/cct/src-<instanceId>/`, applies the diff (F14), runs `tsc --noEmit` (60 s cap) and `tsup` (60 s cap), then starts it as above.
+4. **Patched instance:** copies the **rendered variant source** (`docs/10` §6, the same source the model saw) to `/tmp/faultline/src-<instanceId>/`, applies the diff (F14), runs `tsc --noEmit` (60 s cap) and `tsup` (60 s cap), then starts it as above.
 5. `stopInstance` kills the process (SIGTERM, then SIGKILL after 5 s), deletes the temp dir and DB file, unregisters the route.
 6. Limits: `MAX_LIVE_INSTANCES`; idle instances stopped after 10 min by the `cleanup` job.
 
@@ -172,7 +172,7 @@ Each feature lists: purpose, how it works step by step, inputs/outputs, failure 
 | `src-` | source file excerpt shown to the model (`src-webhooks.ts#L10-42`) | |
 
 - `validateEvidenceRefs(output, runId)` checks that every ID in a model output exists in the run's trace; otherwise the output is rejected (F13).
-- Redaction (`@cct/trace/redact`): `Authorization`, `client_secret`, `access_token`, `password`, cookie values, `PAYPAL-TRANSMISSION-SIG` (kept as hash) are replaced with `[redacted]` before storage.
+- Redaction (`@faultline/trace/redact`): `Authorization`, `client_secret`, `access_token`, `password`, cookie values, `PAYPAL-TRANSMISSION-SIG` (kept as hash) are replaced with `[redacted]` before storage.
 
 **Covered by:** AC-30..AC-32; T-TR-redact, T-TR-evidence.
 
@@ -182,7 +182,7 @@ Each feature lists: purpose, how it works step by step, inputs/outputs, failure 
 
 **How it works**
 1. After the buyer finishes (or fails), wait until all are true or `SETTLE_SECONDS` (default 60) passes: expected webhook deliveries received (per attack spec), held deliveries released, the probe snapshot unchanged for 5 s.
-2. Truth read: `GET /v2/checkout/orders/{id}` for every order the run created (direct to sandbox with CCT's own token, not via the fault proxy). Store `truth_reads` with status, purchase units, captures (id, status, amount).
+2. Truth read: `GET /v2/checkout/orders/{id}` for every order the run created (direct to sandbox with FaultLine's own token, not via the fault proxy). Store `truth_reads` with status, purchase units, captures (id, status, amount).
 3. Final probe snapshot.
 
 **Covered by:** AC-33..AC-34; T-WK-settle.
@@ -191,7 +191,7 @@ Each feature lists: purpose, how it works step by step, inputs/outputs, failure 
 
 **Purpose:** the deterministic judge.
 
-**How it works:** pure functions in `@cct/core/invariants` take `{truth, before, after, deliveries, forwards, calls, catalog}` and return `{id, status: pass|fail|not_applicable, expected, actual, evidence: EvidenceId[]}`. Definitions I1–I7 are in `docs/05-attack-catalog.md` §2. Each attack declares which invariants it checks. A failed invariant creates a `findings` row.
+**How it works:** pure functions in `@faultline/core/invariants` take `{truth, before, after, deliveries, forwards, calls, catalog}` and return `{id, status: pass|fail|not_applicable, expected, actual, evidence: EvidenceId[]}`. Definitions I1–I7 are in `docs/05-attack-catalog.md` §2. Each attack declares which invariants it checks. A failed invariant creates a `findings` row.
 
 **Covered by:** AC-35..AC-41; T-CORE-invariants (table-driven).
 
@@ -232,7 +232,7 @@ Each feature lists: purpose, how it works step by step, inputs/outputs, failure 
 
 **How it works**
 1. Model returns a unified diff limited to `affected_files` plus `db.ts` (for a unique index).
-2. **Patch guard** (`@cct/patch/guard`): diff parses; only allowlisted files; ≤ 120 changed lines; no new imports outside an allowlist (`express`, `better-sqlite3`, `zod`, `node:crypto`); forbidden tokens (`child_process`, `process.env` writes, `fs.rm`, `eval`, `Function(`, `net`, `http.request` to non-PayPal hosts, `BUGS`); must not disable the probe.
+2. **Patch guard** (`@faultline/patch/guard`): diff parses; only allowlisted files; ≤ 120 changed lines; no new imports outside an allowlist (`express`, `better-sqlite3`, `zod`, `node:crypto`); forbidden tokens (`child_process`, `process.env` writes, `fs.rm`, `eval`, `Function(`, `net`, `http.request` to non-PayPal hosts, `BUGS`); must not disable the probe.
 3. Pass → patched instance (F4) → re-run **the same attack** with the same rules → invariants.
 4. Result `verified` (all checked invariants pass), `not_fixed` (still failing; next attempt with the new trace, max `AGENT_MAX_PATCH_ATTEMPTS` = 2), or `rejected` (guard/build).
 5. Regression check (Should): run the other Must attacks on the patched instance; any new failure marks the patch `regressed`.
@@ -266,6 +266,6 @@ Each feature lists: purpose, how it works step by step, inputs/outputs, failure 
 
 ## F18. CLI (Should)
 
-`cct run --target buggybeans:demo --mode agent --wait`, `cct report <runId> --md > report.md`, `cct eval`. Talks to `apps/api` with an access code from `CCT_ACCESS_CODE`.
+`faultline run --target buggybeans:demo --mode agent --wait`, `faultline report <runId> --md > report.md`, `faultline eval`. Talks to `apps/api` with an access code from `FAULTLINE_ACCESS_CODE`.
 
 **Covered by:** AC-67.

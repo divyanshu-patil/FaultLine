@@ -12,7 +12,7 @@ UI labels in third-party dashboards change; where a step says ⚠️, look for t
 ## 2. PayPal sandbox setup
 
 1. Log in at developer.paypal.com → **Testing tools → Sandbox accounts** ⚠️. Ensure you have one **Business** and one **Personal** sandbox account. Note the personal account's email and password (they become `SANDBOX_BUYER_EMAIL` / `SANDBOX_BUYER_PASSWORD`).
-2. **Apps & Credentials → Sandbox → Create App** ⚠️ named `cct-buggybeans`, linked to the business sandbox account. Copy client ID and secret → `PAYPAL_CLIENT_ID`, `PAYPAL_CLIENT_SECRET`.
+2. **Apps & Credentials → Sandbox → Create App** ⚠️ named `faultline-buggybeans`, linked to the business sandbox account. Copy client ID and secret → `PAYPAL_CLIENT_ID`, `PAYPAL_CLIENT_SECRET`.
 3. Start your tunnel first (§5 step 4) to get the public engine URL.
 4. In the app: **Add webhook** ⚠️ with URL `https://<engine-public-url>/hooks/paypal`, events: `CHECKOUT.ORDER.APPROVED`, `PAYMENT.CAPTURE.COMPLETED`, `PAYMENT.CAPTURE.DECLINED`, `PAYMENT.CAPTURE.PENDING`. Copy the **Webhook ID** → `PAYPAL_WEBHOOK_ID`.
 5. Quick check (S0): get a token and create an order with curl:
@@ -29,7 +29,7 @@ When the tunnel URL changes (free tunnels change on restart), update the webhook
 2. `pnpm db:migrate` creates tables (RLS enabled, no policies).
 3. `pnpm seed`.
 
-Local alternative: `docker compose -f infra/docker-compose.yml up -d` and `DATABASE_URL=postgres://cct:cct@localhost:5432/cct`.
+Local alternative: `docker compose -f infra/docker-compose.yml up -d` and `DATABASE_URL=postgres://faultline:faultline@localhost:5432/faultline`.
 
 ## 4. Ollama Cloud
 
@@ -48,7 +48,7 @@ Local alternative: `docker compose -f infra/docker-compose.yml up -d` and `DATAB
 ## 5. Run locally
 
 ```bash
-git clone <repo> && cd checkout-crash-test
+git clone <repo> && cd faultline
 pnpm install
 cp .env.example .env        # fill every value (docs/03 §5)
 pnpm db:migrate && pnpm seed
@@ -64,19 +64,19 @@ Checklist mode without any AI key: choose **Checklist** on the new-run page.
 ## 6. CLI (Should)
 
 ```bash
-CCT_API=http://localhost:4000 CCT_ACCESS_CODE=... pnpm cct -- run --target buggybeans:demo --mode agent --wait
-pnpm cct -- report <runId> --md > report.md
+FAULTLINE_API=http://localhost:4000 FAULTLINE_ACCESS_CODE=... pnpm faultline -- run --target buggybeans:demo --mode agent --wait
+pnpm faultline -- report <runId> --md > report.md
 ```
 
 ## 7. Deploy (Render + Supabase)
 
 1. Create a production Supabase project; run migrations against it; seed.
-2. Render → **New Blueprint** ⚠️ → point at the repo (`infra/render.yaml`). Services: `cct-web`, `cct-api`, `cct-engine` (plan `1c-2g`), `buggybeans-public`.
+2. Render → **New Blueprint** ⚠️ → point at the repo (`infra/render.yaml`). Services: `faultline-web`, `faultline-api`, `faultline-engine` (plan `1c-2g`), `buggybeans-public`.
 3. Set env vars per service (`docs/03` §5). Secrets as "sync: false" values entered in the dashboard ⚠️.
-4. After `cct-engine` is live, set `PUBLIC_BASE_URL` to its URL and update the PayPal sandbox webhook URL to `https://<cct-engine>/hooks/paypal`.
-5. `cct-web` env `API_ORIGIN=https://<cct-api>`.
-6. Run `pnpm demo:rehearse --times 5 --base-url https://<cct-web>`.
-7. Create the pinned demo report: run once, then mark it pinned (`pnpm cct -- pin <runId>` or SQL).
+4. After `faultline-engine` is live, set `PUBLIC_BASE_URL` to its URL and update the PayPal sandbox webhook URL to `https://<faultline-engine>/hooks/paypal`.
+5. `faultline-web` env `API_ORIGIN=https://<faultline-api>`.
+6. Run `pnpm demo:rehearse --times 5 --base-url https://<faultline-web>`.
+7. Create the pinned demo report: run once, then mark it pinned (`pnpm faultline -- pin <runId>` or SQL).
 
 Playwright on Render: install Chromium in the engine build (`pnpm exec playwright install --with-deps chromium` ⚠️ may need a Docker-based service if system deps are missing; S7 decides native vs Docker runtime).
 
@@ -84,8 +84,8 @@ Playwright on Render: install Chromium in the engine build (`pnpm exec playwrigh
 
 - Logs: Render dashboard per service; search by `runId`.
 - Stuck run: it is reclaimed after the job lease (120 s) if the engine restarted; otherwise cancel from the UI.
-- Clean up: the `cleanup` job runs every 10 min; manual: `pnpm cct -- cleanup`.
-- Rotate access codes: change `ACCESS_CODES` on `cct-api` and redeploy.
+- Clean up: the `cleanup` job runs every 10 min; manual: `pnpm faultline -- cleanup`.
+- Rotate access codes: change `ACCESS_CODES` on `faultline-api` and redeploy.
 - Keep Supabase awake: the engine pings `GET /api/health?db=1` every 6 h.
 
 ## 9. Troubleshooting
@@ -93,7 +93,7 @@ Playwright on Render: install Chromium in the engine build (`pnpm exec playwrigh
 | Symptom | Likely cause | Fix |
 | --- | --- | --- |
 | No webhooks arrive | webhook URL points at an old tunnel; engine asleep | update URL in the PayPal app; use a paid engine instance |
-| Deliveries stored but "uncorrelated" | order created outside CCT, or order-id path differs (S2) | check `paypal_calls` for the order; update correlation path |
+| Deliveries stored but "uncorrelated" | order created outside FaultLine, or order-id path differs (S2) | check `paypal_calls` for the order; update correlation path |
 | Store rejects every webhook in fixed mode | wrong `PAYPAL_WEBHOOK_ID` | copy the ID from the app's webhook list |
 | Buyer stuck at PayPal login | captcha / UI change | switch to FB1 stored login state; update selectors file |
 | Capture returns 422 on fixed store | order not approved; sandbox account issue | inspect `pc-` evidence; re-run buyer |

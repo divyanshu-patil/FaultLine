@@ -31,10 +31,10 @@ The buyer's browser session (Playwright) also talks to PayPal's hosted approval 
 2. **Every attack is a recorded experiment.** Inputs, PayPal calls, webhook deliveries, browser steps and state snapshots are stored, so any verdict can be replayed and audited.
 3. **Real over simulated.** Real sandbox purchases and real webhook deliveries are the default. Simulator events and fixtures are labelled.
 4. **AI is optional at runtime.** Checklist mode runs every attack without a model. Agent mode adds planning, diagnosis and patching. If Ollama is down, the run degrades to checklist mode and says so.
-5. **Sandbox-only by construction.** One allowlist module (`@cct/paypal/allowlist`) is the only way to build a PayPal URL. The proxy refuses any other upstream.
+5. **Sandbox-only by construction.** One allowlist module (`@faultline/paypal/allowlist`) is the only way to build a PayPal URL. The proxy refuses any other upstream.
 6. **Throwaway victims.** Every verification re-run gets a fresh BuggyBeans instance with its own SQLite file and port.
 7. **The browser holds no secrets and talks to one origin.** `apps/web` calls `/api/*`, which Next.js rewrites to `apps/api`. Cookies stay first-party.
-8. **Small, typed contracts.** zod schemas in `@cct/schemas` are shared by every app.
+8. **Small, typed contracts.** zod schemas in `@faultline/schemas` are shared by every app.
 
 ## 3. Components
 
@@ -45,7 +45,7 @@ The buyer's browser session (Playwright) also talks to PayPal's hosted approval 
 | Worker | `apps/worker` | Claims jobs; runs the run state machine; agent loop; attack executor; Playwright buyer; invariant checks; instance manager for BuggyBeans; patch apply + verify | Postgres, Ollama, PayPal (read truth), proxy control API, BuggyBeans |
 | Proxy | `apps/proxy` (deployed inside the engine, §12) | **Instance gateway:** serves BuggyBeans instances publicly under `/i/<instanceId>/`. **Webhook chaos proxy:** ingress for PayPal webhooks, record raw delivery, correlate to run, forward / hold / replay / reorder / forge. **API fault proxy:** forwards a target's PayPal REST calls to the sandbox, records them, injects faults per run rules | PayPal sandbox, BuggyBeans, Postgres |
 | Victim store | `apps/buggybeans` | Coffee shop with loyalty credits. PayPal JS SDK buttons, server-side create/capture, webhook handler, seeded bugs B1–B8 switched by env, state probe | PayPal (via proxy), its own SQLite |
-| CLI (Should) | `apps/cli` | `cct run`, `cct report`, `cct eval` against local or hosted API | `apps/api` |
+| CLI (Should) | `apps/cli` | `faultline run`, `faultline report`, `faultline eval` against local or hosted API | `apps/api` |
 | Shared | `packages/*` | schemas, core (attacks, invariants), agent, paypal, db, trace, patch, classifier, config | — |
 
 ## 4. Run lifecycle
@@ -123,7 +123,7 @@ sequenceDiagram
 
 ## 7. API fault proxy
 
-- BuggyBeans reads `PAYPAL_API_BASE`. CCT starts each instance with `PAYPAL_API_BASE=https://<proxy>/paypal/<instanceId>`.
+- BuggyBeans reads `PAYPAL_API_BASE`. FaultLine starts each instance with `PAYPAL_API_BASE=https://<proxy>/paypal/<instanceId>`.
 - The proxy strips the prefix, validates the upstream path against an allowlist of Orders v2 and OAuth paths, forwards to `https://api-m.sandbox.paypal.com`, records request and response (with `Authorization` and token bodies redacted), and returns the response.
 - Fault rules per run (set by the worker through the control API):
   - `timeout_after_forward`: forward, wait for PayPal's response, record it, then return `504` (or hang for `ms`) to the store. The money moved; the store thinks it failed.
@@ -182,9 +182,9 @@ Details, prompts, tool schemas and budgets: `docs/06-agent-spec.md`.
 
 | Service | Render type | Plan (judgement) | Notes |
 | --- | --- | --- | --- |
-| `cct-web` | Web service (Next.js) | free → paid for judging | Or Vercel; Render keeps one vendor for the Render prize |
-| `cct-api` | Web service | free → paid for judging | |
-| `cct-engine` | Web service (proxy + worker + instances) | `1c-2g` ✅ plan exists | Public URL registered as the sandbox webhook. Must not sleep. Chromium needs > 512 MB ⚠️ (S7) |
+| `faultline-web` | Web service (Next.js) | free → paid for judging | Or Vercel; Render keeps one vendor for the Render prize |
+| `faultline-api` | Web service | free → paid for judging | |
+| `faultline-engine` | Web service (proxy + worker + instances) | `1c-2g` ✅ plan exists | Public URL registered as the sandbox webhook. Must not sleep. Chromium needs > 512 MB ⚠️ (S7) |
 | `buggybeans-public` | Web service | free | browseable demo store (buggy preset), not used for attacks |
 | Database | Supabase | free | session pooler URL; project pauses after 7 quiet days ✅ (2026-10-17) |
 
@@ -202,12 +202,12 @@ Local mode can run everything with `pnpm dev` (engine + api + web + Postgres via
 | ADR-004 | Record and replay **real** webhook deliveries | Simulator events | Simulator events cannot be verified by postback ✅ | PayPal adds verifiable test events |
 | ADR-005 | Truth = PayPal GET order/capture + state probe | Trusting store UI or model | Deterministic, auditable | — |
 | ADR-006 | BuggyBeans on SQLite per instance | Supabase schema per instance | Fresh, isolated, instant; mirrors a typical small store | Need cross-instance analytics |
-| ADR-007 | CCT data on Supabase Postgres via Drizzle + `pg`, no supabase-js in the browser | Supabase client SDK + RLS policies | One server-side data path; secrets never in the browser | Multi-tenant accounts are added |
+| ADR-007 | FaultLine data on Supabase Postgres via Drizzle + `pg`, no supabase-js in the browser | Supabase client SDK + RLS policies | One server-side data path; secrets never in the browser | Multi-tenant accounts are added |
 | ADR-008 | Ollama Cloud, Gemma 4 31B, native `/api/chat` | OpenAI-compatible `/v1` endpoint, other providers | Owner's choice; native API verified earlier ✅ | S6 shows tool calls unreliable → JSON-action protocol (already supported) |
 | ADR-009 | Model output always parsed + zod-validated + evidence-checked; template fallback | Trust structured output | Structured output support unclear ❓ | — |
 | ADR-010 | Checklist mode with no AI | Agent-only | Baseline for evals and graceful degradation | — |
 | ADR-011 | AI patches applied only to throwaway BuggyBeans copies, guarded | Apply to user repos / open PRs | Safety; scope | Post-hackathon GitHub App |
-| ADR-012 | Hosted mode only attacks CCT-started BuggyBeans instances | Open targets | Abuse prevention | Ownership verification is hardened |
+| ADR-012 | Hosted mode only attacks FaultLine-started BuggyBeans instances | Open targets | Abuse prevention | Ownership verification is hardened |
 | ADR-013 | Postgres job queue with SKIP LOCKED | Redis/BullMQ, Render Workflows | No extra infra | Throughput needs |
 | ADR-014 | SSE via Postgres LISTEN/NOTIFY | Supabase Realtime, websockets | Simple, one data path | Many concurrent viewers |
 | ADR-015 | Next.js same-origin `/api/*` rewrite; httpOnly cookie session | CORS + cross-site cookies | Avoids the SameSite cookie gap found in the previous project | — |

@@ -1,11 +1,11 @@
 # 03. Monorepo structure
 
-Turborepo + pnpm workspaces. Package scope `@cct/*`. Node 22 LTS ⚠️ (confirm current LTS in S0). Express 5 (5.1 became the npm default on 2025-03-31 ✅ expressjs.com).
+Turborepo + pnpm workspaces. Package scope `@faultline/*`. Node 22 LTS ⚠️ (confirm current LTS in S0). Express 5 (5.1 became the npm default on 2025-03-31 ✅ expressjs.com).
 
 ## 1. Tree
 
 ```
-checkout-crash-test/
+faultline/
 ├── AGENTS.md  CLAUDE.md  judging.md  README.md  LICENSE
 ├── docs/                         # this pack + design.md (owner-provided)
 ├── apps/
@@ -50,7 +50,7 @@ checkout-crash-test/
 │   │   ├── src/db.ts                         # better-sqlite3
 │   │   ├── public/                           # product page, checkout.js
 │   │   └── test/
-│   └── cli/                      # (Should) `cct` command
+│   └── cli/                      # (Should) `faultline` command
 ├── packages/
 │   ├── schemas/                  # zod: API DTOs, run events, attack/rule specs, model contracts, probe contract
 │   ├── core/                     # attack catalog A1–A8, invariants I1–I7, verdict model, budgets (pure)
@@ -76,17 +76,17 @@ checkout-crash-test/
 ## 2. Dependency rules
 
 ```
-apps/web      → @cct/schemas
-apps/api      → @cct/schemas, @cct/db, @cct/core
-apps/proxy    → @cct/schemas, @cct/db, @cct/paypal, @cct/trace
+apps/web      → @faultline/schemas
+apps/api      → @faultline/schemas, @faultline/db, @faultline/core
+apps/proxy    → @faultline/schemas, @faultline/db, @faultline/paypal, @faultline/trace
 apps/worker   → everything in packages/ except config-only
-apps/buggybeans → (nothing from @cct except @cct/schemas for the probe contract)
-packages/core → @cct/schemas
-packages/agent → @cct/schemas, @cct/core, @cct/trace, @cct/classifier
+apps/buggybeans → (nothing from @faultline except @faultline/schemas for the probe contract)
+packages/core → @faultline/schemas
+packages/agent → @faultline/schemas, @faultline/core, @faultline/trace, @faultline/classifier
 packages/patch → (none)
 ```
 
-BuggyBeans deliberately does **not** import `@cct/paypal`: it is meant to look like an ordinary store integration written by a third party.
+BuggyBeans deliberately does **not** import `@faultline/paypal`: it is meant to look like an ordinary store integration written by a third party.
 
 ## 3. Root scripts (`package.json`)
 
@@ -103,7 +103,7 @@ BuggyBeans deliberately does **not** import `@cct/paypal`: it is meant to look l
 | `pnpm demo:rehearse` | demo scenario ×5 from fresh state |
 | `pnpm db:generate` / `db:migrate` | Drizzle migrations |
 | `pnpm seed` | seed targets |
-| `pnpm cct -- <args>` | CLI (Should) |
+| `pnpm faultline -- <args>` | CLI (Should) |
 
 ## 4. `turbo.json` (outline)
 
@@ -117,7 +117,7 @@ BuggyBeans deliberately does **not** import `@cct/paypal`: it is meant to look l
     "typecheck": { "dependsOn": ["^build"] },
     "test": { "dependsOn": ["^build"], "outputs": ["coverage/**"] }
   },
-  "globalEnv": ["NODE_ENV", "CCT_MODE"]
+  "globalEnv": ["NODE_ENV", "FAULTLINE_MODE"]
 }
 ```
 
@@ -130,7 +130,7 @@ Every app validates its env with zod at boot and refuses to start on missing or 
 | Name | Example | Notes |
 | --- | --- | --- |
 | `API_ORIGIN` | `http://localhost:4000` | server-side only, used by rewrites |
-| `NEXT_PUBLIC_APP_NAME` | `Checkout Crash Test` | nothing secret may be `NEXT_PUBLIC_*` |
+| `NEXT_PUBLIC_APP_NAME` | `FaultLine` | nothing secret may be `NEXT_PUBLIC_*` |
 
 ### apps/api
 
@@ -140,7 +140,7 @@ Every app validates its env with zod at boot and refuses to start on missing or 
 | `DATABASE_URL` | Supabase **session pooler** (5432) or direct URL. Never port 6543 |
 | `SESSION_SECRET` | ≥ 32 bytes, signs the session cookie |
 | `ACCESS_CODES` | comma-separated demo access codes (judges get one in the Devpost testing instructions) |
-| `CCT_MODE` | `hosted` or `selfhost` |
+| `FAULTLINE_MODE` | `hosted` or `selfhost` |
 | `ALLOW_EXTERNAL_TARGETS` | `false` in hosted mode (enforced) |
 | `PUBLIC_REPORT_BASE_URL` | for shareable report links |
 | `OPERATOR_CODES` | access codes allowed to start evals (`POST /api/evals`) |
@@ -202,3 +202,17 @@ Live sandbox and model evals run manually or on a nightly schedule with secrets,
 - `tsup` builds services to `dist/`.
 - Drizzle for schema and migrations; SQL committed in `infra/supabase/migrations`.
 - pino logs; `requestId`, `runId`, `attackId` on every line.
+
+## 8. Implementation decisions (2026-10-19, after spikes)
+
+These replace the matching lines above; each one removes a dependency or a build step.
+
+| Topic | Plan said | Built as | Why |
+| --- | --- | --- | --- |
+| Package scope / names | `@cct/*`, `CCT_MODE`, `cct_session` | `@faultline/*`, `FAULTLINE_MODE`, `fl_session` | project renamed to FaultLine |
+| TypeScript runtime | `tsup` builds to `dist/` | Node 24 native type stripping runs `src/*.ts`; `erasableSyntaxOnly` | S9: no build step for services or patched stores |
+| BuggyBeans SQLite | `better-sqlite3` | `node:sqlite` (built in) | no native addon; patch guard allows `node:sqlite` |
+| Database access | Drizzle | plain `pg` + SQL migrations in `packages/db/migrations`; tests use PGlite (in-process Postgres) | one SQL dialect, real Postgres semantics in tests without a second repository fake |
+| Live stream | LISTEN/NOTIFY | SSE handler polls `run_events` every second | works on any pooler; meets AC-59 (≤ 2 s) |
+| Proxy control | HTTP control API | in-process control object (engine = proxy + worker in one process) | hosted mode already runs them together (ADR-003) |
+| Buyer approval | Playwright popup login | pluggable `BUYER_APPROVAL`: `login` (Playwright on the approve link, needs `SANDBOX_BUYER_PASSWORD`), `card` (needs ACDC), `assisted` (human approves, run waits), `fake` (FakePayPal) | S1 blocked on credentials; the store's own checkout calls are made exactly as `checkout.js` makes them |

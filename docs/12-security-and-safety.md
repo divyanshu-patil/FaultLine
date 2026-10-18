@@ -1,33 +1,33 @@
 # 12. Security and safety
 
-CCT is an attack tool. Its safety case rests on four things: **sandbox only**, **owned targets only**, **AI never judges**, **AI code runs only in throwaway copies**.
+FaultLine is an attack tool. Its safety case rests on four things: **sandbox only**, **owned targets only**, **AI never judges**, **AI code runs only in throwaway copies**.
 
 ## 1. Threat model (summary)
 
 | Asset | Threat | Control |
 | --- | --- | --- |
-| Third-party stores | CCT used to attack a store the user does not own | hosted mode: BuggyBeans only; selfhost: ownership token (§3); SSRF guard |
+| Third-party stores | FaultLine used to attack a store the user does not own | hosted mode: BuggyBeans only; selfhost: ownership token (§3); SSRF guard |
 | Real money | accidental production calls | sandbox host allowlist at boot and per request; CI grep; no production credentials accepted (client IDs are validated by calling the sandbox token endpoint at boot) |
 | PayPal/Ollama/DB secrets | leakage to browser, logs, reports, model | server-only env; redaction; CI bundle grep; reports built from redacted summaries |
-| CCT host | AI-written patch runs malicious code | patch guard (§5), throwaway instance with minimal env, time limits |
+| FaultLine host | AI-written patch runs malicious code | patch guard (§5), throwaway instance with minimal env, time limits |
 | Agent integrity | prompt injection from store code/trace | untrusted tags, closed tool set, arg allowlists, verdicts never model-controlled (`docs/06` §10) |
 | Budget | strangers burning Ollama/PayPal quota | access codes, rate limits, one active run per session, budgets |
 | Judges' trust | overclaiming | real-vs-simulated labels; template/reference labels; evidence validation |
 
 ## 2. Sandbox-only rule
 
-- `@cct/paypal/allowlist`: `PAYPAL_API_HOST` must equal `https://api-m.sandbox.paypal.com`; otherwise the process exits with a clear error.
+- `@faultline/paypal/allowlist`: `PAYPAL_API_HOST` must equal `https://api-m.sandbox.paypal.com`; otherwise the process exits with a clear error.
 - The fault proxy builds upstream URLs only through the allowlist; paths are matched against `docs/07` §8.
 - `scripts/check-no-prod-host.sh` in CI.
 - The UI always shows the SANDBOX ONLY badge.
 
 ## 3. Target ownership (self-host mode)
 
-1. Only enabled when `CCT_MODE=selfhost` and `ALLOW_EXTERNAL_TARGETS=true`.
-2. Verification token: 32 random bytes, shown once, stored hashed; served by the target at `/.well-known/cct-verify.txt`.
+1. Only enabled when `FAULTLINE_MODE=selfhost` and `ALLOW_EXTERNAL_TARGETS=true`.
+2. Verification token: 32 random bytes, shown once, stored hashed; served by the target at `/.well-known/faultline-verify.txt`.
 3. SSRF guard: resolve the host; refuse private, loopback, link-local and metadata ranges unless the host is literally `localhost` in selfhost mode; refuse redirects to other hosts during verification.
 4. Rate limits per target: max 1 run at a time; attacks generate a handful of requests (no load testing).
-5. The target's own sandbox app and webhook must point at the CCT engine; CCT never asks for the target's PayPal credentials.
+5. The target's own sandbox app and webhook must point at the FaultLine engine; FaultLine never asks for the target's PayPal credentials.
 
 ## 4. Secrets handling
 
@@ -39,7 +39,7 @@ CCT is an attack tool. Its safety case rests on four things: **sandbox only**, *
 
 ## 5. Patch guard and execution
 
-Guard (`@cct/patch/guard`), all must pass:
+Guard (`@faultline/patch/guard`), all must pass:
 1. Diff parses; applies cleanly to the rendered variant source.
 2. Files ⊆ `affected_files ∪ {db.ts}` ⊆ BuggyBeans allowlist (`routes/*.ts`, `db.ts`, `public/checkout.js`).
 3. ≤ 120 changed lines; no binary; no new files except none (MVP).
@@ -54,7 +54,7 @@ Residual risk (stated in README): the guard is a deny/allow list, not a sandbox;
 ## 6. Web security
 
 - Session cookie httpOnly, Secure, SameSite=Lax, signed; same-origin via rewrite.
-- CSRF: state-changing routes require the custom header `x-cct-csrf: 1` (set by `lib/api.ts`) and same-origin `Origin` check.
+- CSRF: state-changing routes require the custom header `x-fl-csrf: 1` (set by `lib/api.ts`) and same-origin `Origin` check.
 - `helmet` defaults; CSP on `apps/web` (no inline scripts except Next's nonce).
 - Report pages are public but contain only redacted data; slugs are unguessable.
 
@@ -65,4 +65,4 @@ Residual risk (stated in README): the guard is a deny/allow list, not a sandbox;
 
 ## 8. Responsible-use note (README)
 
-"CCT sends unusual but low-volume traffic to stores you own, in PayPal's sandbox. Do not point it at stores you do not own or at production."
+"FaultLine sends unusual but low-volume traffic to stores you own, in PayPal's sandbox. Do not point it at stores you do not own or at production."

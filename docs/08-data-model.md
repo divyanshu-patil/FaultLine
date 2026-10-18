@@ -1,6 +1,6 @@
 # 08. Data model (Supabase Postgres)
 
-CCT's data lives in one Supabase Postgres database, accessed **only from the server** (`apps/api`, `apps/proxy`, `apps/worker`) with Drizzle over `pg`. BuggyBeans instances use their own SQLite files (ADR-006) and are not part of this schema.
+FaultLine's data lives in one Supabase Postgres database, accessed **only from the server** (`apps/api`, `apps/proxy`, `apps/worker`) with Drizzle over `pg`. BuggyBeans instances use their own SQLite files (ADR-006) and are not part of this schema.
 
 ## 1. Supabase notes
 
@@ -128,7 +128,7 @@ PK `(run_id, evidence_id)`. Index `(run_id, kind, at)`.
 | run_id, instance_id | null until correlated | |
 | raw_body | bytea | exact bytes (needed for replay) |
 | headers | jsonb | the five `PAYPAL-*` headers (signature kept; never shown in UI raw) |
-| forged | boolean | true for CCT-forged events |
+| forged | boolean | true for FaultLine-forged events |
 | evidence_id | text | `wh-…` |
 
 ### webhook_forwards
@@ -149,7 +149,7 @@ PK `(run_id, evidence_id)`. Index `(run_id, kind, at)`.
 | --- | --- | --- |
 | id | uuid pk | |
 | run_id, instance_id | | |
-| source | text | `proxy` (store's call) \| `truth` (CCT's read) |
+| source | text | `proxy` (store's call) \| `truth` (FaultLine's read) |
 | method, path | text | |
 | request_headers | jsonb | redacted |
 | request_body | jsonb | redacted |

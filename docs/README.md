@@ -1,8 +1,8 @@
-# Checkout Crash Test — docs pack
+# FaultLine — docs pack
 
 > An AI agent that shops at your store to break it.
 
-Checkout Crash Test (code name **CCT**) is a stress-tester for PayPal checkout integrations. An AI agent acts as a shopper and places real **PayPal sandbox** orders on a store. It then deliberately creates the conditions that break real integrations: duplicate and out-of-order webhooks, forged webhooks, a capture that times out after it succeeded, a tampered price, a declined payment. Deterministic checks decide pass or fail against PayPal's own record of the order. When something breaks, the agent explains the cause using only evidence from the trace and writes a patch. CCT then runs the same attack on the patched store to prove the fix.
+**FaultLine** is a stress-tester for PayPal checkout integrations. An AI agent acts as a shopper and places real **PayPal sandbox** orders on a store. It then deliberately creates the conditions that break real integrations: duplicate and out-of-order webhooks, forged webhooks, a capture that times out after it succeeded, a tampered price, a declined payment. Deterministic checks decide pass or fail against PayPal's own record of the order. When something breaks, the agent explains the cause using only evidence from the trace and writes a patch. FaultLine then runs the same attack on the patched store to prove the fix.
 
 Built for the PayPal AI Hackathon "Build What's Next with PayPal and AI" (Devpost). The submission deadline is **12 Nov 2026 12:00 pm PT = 13 Nov 2026 01:30 IST**. This plan targets submission on **Wed 11 Nov 2026, 18:00 IST**. Pack written Mon 19 Oct 2026 (IST).
 
@@ -29,7 +29,7 @@ Copy `AGENTS.md`, `CLAUDE.md` and `judging.md` to the repo root and everything i
 | --- | --- |
 | `AGENTS.md` | the rules every coding agent must follow |
 | `CLAUDE.md` | pointer for Claude Code |
-| `judging.md` | official rules and criteria, how CCT scores on each, prize strategy, Stage One checklist |
+| `judging.md` | official rules and criteria, how FaultLine scores on each, prize strategy, Stage One checklist |
 | `docs/01-product-brief.md` | the user, the problem, scope, non-goals, success measures |
 | `docs/02-architecture.md` | system design, components, flows (mermaid), state machines, decisions (ADR-001…016) |
 | `docs/03-monorepo-structure.md` | Turborepo tree, packages, scripts, env vars, CI |
@@ -65,27 +65,27 @@ Nothing here states a market statistic, a win rate or a "no competitor" claim wi
 
 ## Facts that shape the plan
 
-1. **PayPal says webhooks can be duplicated and arrive out of order** (Hookdeck's guide ✅, consistent with PayPal's webhook docs ⚠️). That is the core bug class CCT hunts.
-2. **Simulator webhooks cannot be verified by PayPal's postback endpoint** ✅. CCT therefore records and replays **real** sandbox deliveries, and uses the simulator only for plumbing tests.
-3. **PayPal sandbox has "negative testing"**: a `PayPal-Mock-Response` header makes Orders v2 create/capture return real error responses ✅. CCT uses it for the declined-payment attack.
+1. **PayPal says webhooks can be duplicated and arrive out of order** (Hookdeck's guide ✅, consistent with PayPal's webhook docs ⚠️). That is the core bug class FaultLine hunts.
+2. **Simulator webhooks cannot be verified by PayPal's postback endpoint** ✅. FaultLine therefore records and replays **real** sandbox deliveries, and uses the simulator only for plumbing tests.
+3. **PayPal sandbox has "negative testing"**: a `PayPal-Mock-Response` header makes Orders v2 create/capture return real error responses ✅. FaultLine uses it for the declined-payment attack.
 4. **`PayPal-Request-Id` makes retries idempotent** where supported ✅ (Orders v2 support ⚠️, spike S4). The fix for the capture-timeout bug relies on it.
 5. **The PayPal popup may resist automation** (captcha/bot checks) ❓. Spike S1 on Day 0 decides the buyer-agent approach.
 6. **Ollama Cloud structured output support is unclear** ❓ (docs read on 2026-10-17 said none; a 2026 third-party guide says `format` works). Every model output is parsed and validated by code anyway, and every AI step has a non-AI fallback.
-7. **Only AG Grid, APIMatic, Bryntum, Channel3 and Render have sponsor prizes** ✅. KERNEL and Postman tools are allowed but carry no prize. Render is the natural sponsor track for CCT.
+7. **Only AG Grid, APIMatic, Bryntum, Channel3 and Render have sponsor prizes** ✅. KERNEL and Postman tools are allowed but carry no prize. Render is the natural sponsor track for FaultLine.
 8. **Judges may judge from the text, images and video alone** ✅. The video and the README must show the full loop on their own.
 
 ## Glossary
 
 | Term | Meaning |
 | --- | --- |
-| Target | a store CCT is allowed to attack (BuggyBeans, or a verified self-hosted sandbox store) |
+| Target | a store FaultLine is allowed to attack (BuggyBeans, or a verified self-hosted sandbox store) |
 | Run | one session against one target: recon → attacks → diagnosis → patch → verify → report |
 | Attack | a scripted disturbance (A1–A8) executed against the target, e.g. duplicate webhook |
 | Invariant | a deterministic rule that must hold after an attack (I1–I7), e.g. "credits granted once per capture" |
 | Finding | a failed invariant with its evidence |
 | Trace | everything recorded during an attack: browser steps, PayPal API calls, webhook deliveries, store state snapshots |
-| Settle window | the time CCT waits for webhooks and state to stabilise before checking invariants (default 60 s) |
+| Settle window | the time FaultLine waits for webhooks and state to stabilise before checking invariants (default 60 s) |
 | Checklist mode | a run with no AI: every attack in a fixed order. Baseline and fallback |
 | Agent mode | the AI chooses attacks, diagnoses failures and writes patches |
 | BuggyBeans | the bundled victim store with switchable seeded bugs B1–B8 |
-| State probe | the read-only endpoint a target exposes so CCT can see its orders and entitlements |
+| State probe | the read-only endpoint a target exposes so FaultLine can see its orders and entitlements |

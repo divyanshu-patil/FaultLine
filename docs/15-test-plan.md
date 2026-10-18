@@ -51,7 +51,7 @@
 | T-WEB-a11y | UI e2e | axe checks on S1–S8; keyboard paths; text+icon verdicts | AC-61 |
 | T-SBX-purchase | sandbox | real purchase approve/abandon; screenshots policy | AC-16, AC-18 |
 | T-SBX-attacks | sandbox | A1, A3, A4, A5, A7 on their bug and on the fixed store | AC-27, AC-28, AC-36..40 |
-| T-CLI | integration | `cct run … --wait` | AC-67 |
+| T-CLI | integration | `faultline run … --wait` | AC-67 |
 
 ## 4. How to run
 
@@ -62,7 +62,7 @@ docker compose -f infra/docker-compose.yml up -d   # local Postgres (or point DA
 pnpm db:migrate && pnpm seed
 
 pnpm check                       # lint + typecheck + unit + integration + worker (fakes)
-pnpm test --filter @cct/core     # one package
+pnpm test --filter @faultline/core     # one package
 pnpm test:e2e                    # UI e2e against fakes
 
 # live sandbox (needs PayPal sandbox creds, buyer creds, tunnel running, webhook registered)

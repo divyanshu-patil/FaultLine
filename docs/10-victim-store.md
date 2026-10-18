@@ -5,7 +5,7 @@ BuggyBeans is a deliberately small coffee shop that sells bags of coffee and gra
 ## 1. Requirements
 
 - Express 5 server, server-rendered HTML (or static HTML + `checkout.js`), SQLite via `better-sqlite3`.
-- Uses PayPal JS SDK buttons and its own tiny REST client (does **not** import `@cct/paypal`).
+- Uses PayPal JS SDK buttons and its own tiny REST client (does **not** import `@faultline/paypal`).
 - Every bug is a small, readable code path switched by the `BUGS` env (parsed in `src/bugs.ts`). In **fixed** form each code path is what we would recommend in production.
 - The source must stay readable for the model: no clever abstractions; each route file < 200 lines.
 - Has a state probe and catalog endpoint protected by `PROBE_TOKEN` (`docs/09` §3).
@@ -74,5 +74,5 @@ The `UNIQUE` constraints are created conditionally by `db.ts` based on `BUGS`, w
 ## 8. Tests for BuggyBeans itself
 
 - Unit: each bug flag changes exactly the intended behaviour (FakePayPal).
-- Contract: probe output validates against `@cct/schemas/probe`.
+- Contract: probe output validates against `@faultline/schemas/probe`.
 - Variant rendering: rendered source compiles for every preset and contains no `bugs.` references.

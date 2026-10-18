@@ -36,7 +36,7 @@ Format: **ID — Given / When / Then** · priority · test reference (`docs/15`)
 - **AC-21** — Given a delivery for an order created by a run's instance, when stored, then it is correlated to that run and instance. Uncorrelated deliveries are stored and not forwarded. · Must · T-PX-hooks
 - **AC-22** — Given rule `duplicate {times:3}`, when the matching delivery arrives, then exactly 3 forwards with identical bytes and headers are recorded. · Must · T-PX-hooks
 - **AC-23** — Given rules hold APPROVED / release after COMPLETED, when both arrive, then forwards occur in the order COMPLETED, APPROVED. · Should · T-PX-hooks
-- **AC-24** — Given rule `forge`, when executed, then the forged delivery is marked `forged=true`, its order ID matches the run's abandoned order, and the UI labels it "forged by CCT". · Must · T-PX-hooks, T-WEB-run-view
+- **AC-24** — Given rule `forge`, when executed, then the forged delivery is marked `forged=true`, its order ID matches the run's abandoned order, and the UI labels it "forged by FaultLine". · Must · T-PX-hooks, T-WEB-run-view
 - **AC-25** — Given rule `drop`, when deliveries arrive, then no forwards are recorded and the deliveries are still stored. · Should · T-PX-hooks
 
 ## F7 Fault proxy
@@ -103,7 +103,7 @@ Format: **ID — Given / When / Then** · priority · test reference (`docs/15`)
 - **AC-66** — Live eval writes `eval/results/<date>.json` and a Markdown summary with the metrics in `docs/15` §6. · Must · eval
 
 ## F18 CLI
-- **AC-67** — `cct run --target buggybeans:demo --mode checklist --wait` exits 0 and prints the findings table. · Should · T-CLI
+- **AC-67** — `faultline run --target buggybeans:demo --mode checklist --wait` exits 0 and prints the findings table. · Should · T-CLI
 
 ## Non-functional
 - **AC-NF-01** — No occurrence of the production PayPal host outside `docs/`; CI enforces. · Must

@@ -1,4 +1,4 @@
-# judging.md — rules, criteria and how Checkout Crash Test is judged
+# judging.md — rules, criteria and how FaultLine is judged
 
 Sources: official rules at paypalaihackathon.devpost.com/rules and the Devpost overview, read 2026-10-17 and 2026-10-19 (✅). Re-read both before submitting; rules can change.
 
@@ -38,7 +38,7 @@ Sources: official rules at paypalaihackathon.devpost.com/rules and the Devpost o
 
 **Eligibility** ✅: age of majority where you live; residents of Brazil, Quebec, Russia, Crimea, Cuba, Iran, North Korea and other comprehensively OFAC-sanctioned places are excluded; sponsor/administrator staff, judges and conflicted persons excluded. Confirm your own eligibility.
 
-## 2. How CCT scores on each criterion
+## 2. How FaultLine scores on each criterion
 
 Self-assessment is the author's judgement. It is not a prediction.
 
@@ -56,10 +56,10 @@ Self-assessment is the author's judgement. It is not a prediction.
 
 - **Primary:** Grand Prize (all criteria) and the Honorable Mention **Best Use of PayPal + AI** (natural fit: PayPal is the system under test and the source of truth; AI plans, explains and fixes).
 - **Also plausible:** **Best Demo Delivery** (red → green proof is visual); **Most Creative**.
-- **Weak fit:** Best Use of Agentic Commerce (CCT is agentic AI on payment rails, not an AI shopping for a consumer). Do not stretch the pitch to fit it; the buyer agent is a test actor.
+- **Weak fit:** Best Use of Agentic Commerce (FaultLine is agentic AI on payment rails, not an AI shopping for a consumer). Do not stretch the pitch to fit it; the buyer agent is a test actor.
 - **Sponsor prize (one at most):**
-  - **Render** — CCT is hosted on Render (web, API, engine). Eligible by using Render ✅. Judging criteria beyond use are unpublished ❓.
-  - **AG Grid (optional, bigger prize)** — using AG Grid (community edition ⚠️ licence) for the trace explorer and invariant board would make CCT eligible for the AG Grid prize. AG Grid's published interests (custom widgets, theming/layout, Studio agent framework ✅ 2026-10-17) mean a token grid is unlikely to win; only do this if UI time allows (Could). Decide by G3.
+  - **Render** — FaultLine is hosted on Render (web, API, engine). Eligible by using Render ✅. Judging criteria beyond use are unpublished ❓.
+  - **AG Grid (optional, bigger prize)** — using AG Grid (community edition ⚠️ licence) for the trace explorer and invariant board would make FaultLine eligible for the AG Grid prize. AG Grid's published interests (custom widgets, theming/layout, Studio agent framework ✅ 2026-10-17) mean a token grid is unlikely to win; only do this if UI time allows (Could). Decide by G3.
 
 ## 4. Stage One checklist (must all be yes)
 

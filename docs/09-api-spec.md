@@ -25,7 +25,7 @@ Conventions for every service:
 | Method | Path | Auth | Body / query | Response |
 | --- | --- | --- | --- | --- |
 | GET | `/api/health` | none | `?db=1` checks DB | `200 {ok, version, mode, db?: "ok"}` |
-| POST | `/api/session` | none | `{code}` | `204` + `Set-Cookie: cct_session` |
+| POST | `/api/session` | none | `{code}` | `204` + `Set-Cookie: fl_session` |
 | DELETE | `/api/session` | session | — | `204` |
 | GET | `/api/me` | session | — | `{sessionId, expiresAt, activeRunId}` |
 
@@ -112,7 +112,7 @@ Heartbeat comment `: ping` every 15 s. The stream closes after `completed|failed
 | PUT | `/control/instances/:instanceId` | `{port, runId}` | register |
 | DELETE | `/control/instances/:instanceId` | — | unregister |
 
-Rule schemas (`@cct/schemas/rules`):
+Rule schemas (`@faultline/schemas/rules`):
 
 ```ts
 type WebhookRule =
@@ -134,7 +134,7 @@ type FaultRule = {
 
 ## 3. `apps/buggybeans` (victim store)
 
-These routes are what CCT expects of any target; external stores implement the probe contract only.
+These routes are what FaultLine expects of any target; external stores implement the probe contract only.
 
 | Method | Path | Notes |
 | --- | --- | --- |
@@ -149,7 +149,7 @@ These routes are what CCT expects of any target; external stores implement the p
 | GET | `/__crashtest/state` | probe (below); requires `Authorization: Bearer $PROBE_TOKEN` |
 | GET | `/__crashtest/catalog` | `[{sku, name, price, currency, creditsPerItem}]`; same auth |
 
-### Probe contract (`@cct/schemas/probe`)
+### Probe contract (`@faultline/schemas/probe`)
 
 ```json
 {

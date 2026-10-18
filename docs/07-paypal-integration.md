@@ -14,13 +14,13 @@ Legend: ✅ read in PayPal docs (date given) · ⚠️ memory or third-party · 
 | Accounts | one sandbox **business** account (the store), one sandbox **personal** account (the buyer) | ⚠️ default sandbox accounts may already exist |
 | REST app | sandbox app owned by the business account; gives client ID + secret | ✅ concept |
 
-Two sandbox apps are recommended: `cct-buggybeans` (used by all BuggyBeans instances; its webhook points at the engine) and, if you test an external store, that store's own app.
+Two sandbox apps are recommended: `faultline-buggybeans` (used by all BuggyBeans instances; its webhook points at the engine) and, if you test an external store, that store's own app.
 
 ## 2. OAuth
 
 - `POST /v1/oauth2/token`, HTTP Basic (`client_id:secret`), body `grant_type=client_credentials` ⚠️ (standard; confirm in S0).
 - Cache the token until `expires_in − 300 s`; refresh on 401 once.
-- BuggyBeans has its own small client (it imitates a third-party store); CCT's truth reader uses `@cct/paypal`.
+- BuggyBeans has its own small client (it imitates a third-party store); FaultLine's truth reader uses `@faultline/paypal`.
 
 ## 3. Orders v2
 
@@ -28,10 +28,10 @@ Two sandbox apps are recommended: `cct-buggybeans` (used by all BuggyBeans insta
 | --- | --- | --- | --- |
 | Create order `POST /v2/checkout/orders` | BuggyBeans (via fault proxy) | `{intent:"CAPTURE", purchase_units:[{reference_id, amount:{currency_code:"USD", value:"12.00"}}]}` → `201 {id, status:"CREATED", links}` | ⚠️ body shape (standard); S0 confirms |
 | Capture `POST /v2/checkout/orders/{id}/capture` | BuggyBeans (via fault proxy) | empty JSON body; header `PayPal-Request-Id` in the fixed store → `201 {status:"COMPLETED", purchase_units[0].payments.captures[0].{id,status,amount}}` | ⚠️ shape; S0 |
-| Show order `GET /v2/checkout/orders/{id}` | CCT truth reader (direct) | `status` (`CREATED`, `APPROVED`, `COMPLETED`, …), captures | ⚠️ shape; S0 |
+| Show order `GET /v2/checkout/orders/{id}` | FaultLine truth reader (direct) | `status` (`CREATED`, `APPROVED`, `COMPLETED`, …), captures | ⚠️ shape; S0 |
 | Negative testing on create/capture/show | fault proxy | header `PayPal-Mock-Response: {"mock_application_codes":"<CODE>"}` | ✅ (Orders v2 create, update, show, authorize, capture listed, 2026-10-19) |
 
-Capture outcomes CCT must understand:
+Capture outcomes FaultLine must understand:
 - `201` + `status: COMPLETED` → captured.
 - `422` with an issue code (e.g. `INSTRUMENT_DECLINED` ⚠️, `ORDER_ALREADY_CAPTURED` ⚠️) → not captured this call. S4/S5 record the exact codes observed.
 - Timeout/5xx → unknown; must reconcile with `GET` order.
@@ -46,7 +46,7 @@ Capture outcomes CCT must understand:
 
 | Item | Contract | Status |
 | --- | --- | --- |
-| Events subscribed on the `cct-buggybeans` app | `CHECKOUT.ORDER.APPROVED`, `PAYMENT.CAPTURE.COMPLETED`, `PAYMENT.CAPTURE.DECLINED`, `PAYMENT.CAPTURE.PENDING` | `CHECKOUT.ORDER.APPROVED` ✅ (Orders v2 event reference, 2026-10-19); capture events ⚠️ |
+| Events subscribed on the `faultline-buggybeans` app | `CHECKOUT.ORDER.APPROVED`, `PAYMENT.CAPTURE.COMPLETED`, `PAYMENT.CAPTURE.DECLINED`, `PAYMENT.CAPTURE.PENDING` | `CHECKOUT.ORDER.APPROVED` ✅ (Orders v2 event reference, 2026-10-19); capture events ⚠️ |
 | URL | `https://<engine>/hooks/paypal` (HTTPS, port 443) | simulator requires HTTPS 443 ✅ |
 | Verify | `POST /v1/notifications/verify-webhook-signature` with `auth_algo`, `cert_url`, `transmission_id`, `transmission_sig`, `transmission_time`, `webhook_id`, `webhook_event`; success is `verification_status: "SUCCESS"` | ✅ (2026-10-17) |
 | Headers on deliveries | `PAYPAL-TRANSMISSION-ID`, `PAYPAL-TRANSMISSION-TIME`, `PAYPAL-CERT-URL`, `PAYPAL-AUTH-ALGO`, `PAYPAL-TRANSMISSION-SIG` | ✅ (2026-10-17) |
@@ -59,7 +59,7 @@ Capture outcomes CCT must understand:
 | Capture → order link | `resource.supplementary_data.related_ids.order_id` on capture events | ⚠️ S2 |
 | Replay of a real delivery re-verifies | — | ❓ S3 |
 
-CCT never treats a simulator event as a real payment, and labels simulator use in the UI.
+FaultLine never treats a simulator event as a real payment, and labels simulator use in the UI.
 
 ## 6. Idempotency
 
@@ -71,10 +71,10 @@ CCT never treats a simulator event as a real payment, and labels simulator use i
 
 - Add `PayPal-Mock-Response` with `mock_application_codes` to make the sandbox return that error ✅ (2026-10-19).
 - Supported (from the page): Payments v1 create/execute; Payments v2 show/capture/void authorization, show capture, refund, show refund; Orders v2 create, update, show, authorize, capture ✅.
-- Codes: the page's example is `DUPLICATE_INVOICE_ID`; the full list is in the Orders API error reference ✅ (pointer). Codes CCT wants: `INSTRUMENT_DECLINED`, `TRANSACTION_REFUSED`, `ORDER_NOT_APPROVED` ⚠️ — S5 records which ones work on capture for our app.
+- Codes: the page's example is `DUPLICATE_INVOICE_ID`; the full list is in the Orders API error reference ✅ (pointer). Codes FaultLine wants: `INSTRUMENT_DECLINED`, `TRANSACTION_REFUSED`, `ORDER_NOT_APPROVED` ⚠️ — S5 records which ones work on capture for our app.
 - Whether negative testing needs to be enabled on the sandbox account ❓ (the page describes the header alone) — S5.
 
-## 8. Allowlist (`@cct/paypal/allowlist` and the fault proxy)
+## 8. Allowlist (`@faultline/paypal/allowlist` and the fault proxy)
 
 | Method | Path | Who |
 | --- | --- | --- |
@@ -82,10 +82,20 @@ CCT never treats a simulator event as a real payment, and labels simulator use i
 | POST | `/v2/checkout/orders` | proxy (store) |
 | GET | `/v2/checkout/orders/{id}` | proxy (store), truth reader |
 | POST | `/v2/checkout/orders/{id}/capture` | proxy (store) |
-| POST | `/v1/notifications/verify-webhook-signature` | proxy (store), CCT tests |
+| POST | `/v1/notifications/verify-webhook-signature` | proxy (store), FaultLine tests |
 | POST | `/v1/notifications/simulate-event` ⚠️ path | plumbing tests only |
+| POST | `/v2/checkout/orders/{id}/confirm-payment-source` | buyer approval strategy `card` only (worker, never via the store) |
+| GET/POST/PATCH | `/v1/notifications/webhooks[/{id}]` | `pnpm setup:webhook` only (registers the FaultLine webhook; never touches other webhooks on the app) |
 
 Anything else → `403 UPSTREAM_PATH_NOT_ALLOWED`. Host is fixed to the sandbox host; any other host fails at boot.
+
+## 8a. Observed in spikes (2026-10-19)
+
+- Capture before approval → `422`, `details[0].issue = "ORDER_NOT_APPROVED"` ✅.
+- Negative testing works on capture regardless of approval: `422 INSTRUMENT_DECLINED` ✅ (S5).
+- `confirm-payment-source` with a card needs the business account enabled for card processing; ours is not (`PAYER_CANNOT_PAY` / `PAYEE_NOT_ENABLED_FOR_CARD_PROCESSING`) ✅.
+- `verify-webhook-signature` validates field formats first: a `webhook_id` or `transmission_id` with invalid characters → `400 INVALID_REQUEST` ✅. Forged templates therefore use well-formed IDs so the store's postback reaches the signature check.
+- Response header `paypal-debug-id` is present ✅.
 
 ## 9. Rate limits and errors
 

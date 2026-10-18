@@ -7,9 +7,9 @@ Record the hosted app at 1080p. Use voice-over, no copyrighted music. Show real 
 | Time | Screen | Voice-over (draft) |
 | --- | --- | --- |
 | 0:00–0:15 | BuggyBeans store, a purchase completes | "This coffee shop takes PayPal. Its happy path works. But PayPal webhooks can arrive twice, late, or out of order, and networks time out. What does this store do then?" |
-| 0:15–0:30 | CCT home → Run demo crash test (agent) | "Checkout Crash Test is an AI agent that shops at your store to break it, using only PayPal sandbox money." |
+| 0:15–0:30 | FaultLine home → Run demo crash test (agent) | "FaultLine is an AI agent that shops at your store to break it, using only PayPal sandbox money." |
 | 0:30–0:50 | Recon suspects table | "First it reads the store's payment code and lists suspects: no signature check, no dedupe, no retry with a PayPal-Request-Id." |
-| 0:50–1:30 | Live timeline for A4: buyer pays in the PayPal popup; proxy injects a timeout after PayPal captured; invariant board turns red (I4, I6) | "The agent picks the nastiest one. A real buyer pays. PayPal captures. CCT cuts the response on the way back. The store thinks the payment failed. PayPal's own record says COMPLETED. The customer was charged and got no coffee. The verdict comes from code, comparing PayPal's record with the store's, not from the AI." |
+| 0:50–1:30 | Live timeline for A4: buyer pays in the PayPal popup; proxy injects a timeout after PayPal captured; invariant board turns red (I4, I6) | "The agent picks the nastiest one. A real buyer pays. PayPal captures. FaultLine cuts the response on the way back. The store thinks the payment failed. PayPal's own record says COMPLETED. The customer was charged and got no coffee. The verdict comes from code, comparing PayPal's record with the store's, not from the AI." |
 | 1:30–1:55 | Finding page: diagnosis with evidence chips; patch diff | "The AI explains the cause, citing exact evidence IDs from the trace, and writes a small patch: retry with the same PayPal-Request-Id and reconcile with the order." |
 | 1:55–2:15 | Proof cards: same attack on a fresh patched store → green | "Then it proves the fix. Fresh store, same attack, same PayPal sandbox. Green." |
 | 2:15–2:35 | Montage: A1 duplicate webhook (credits ×3), A3 forged webhook, A5 $0.01 price, A7 declined capture via PayPal negative testing | "Same loop for duplicate webhooks, forged webhooks, price tampering and declined payments." |
@@ -19,7 +19,7 @@ Checklist: SANDBOX badge visible; one PayPal order ID visible; "AI explanation" 
 
 ## 2. Devpost text (draft — replace bracketed values with measured ones)
 
-**Name:** Checkout Crash Test
+**Name:** FaultLine
 
 **Tagline:** An AI agent that shops at your store to break it, then proves the fix, on PayPal sandbox.
 
@@ -30,7 +30,7 @@ Checklist: SANDBOX badge visible; one PayPal order ID visible; "AI explanation" 
 - It runs attacks with real PayPal sandbox purchases: duplicate, out-of-order and forged webhooks; a capture that times out after PayPal captured; price tampering; declined captures using PayPal's negative testing.
 - Deterministic checks compare PayPal's order record with the store's records and decide pass/fail.
 - For each failure, the agent explains the cause, citing evidence IDs from the trace, and writes a patch.
-- CCT runs the same attack on a fresh copy of the store with the patch, and shows before/after.
+- FaultLine runs the same attack on a fresh copy of the store with the patch, and shows before/after.
 
 **How we built it:** Turborepo; Next.js UI; Express services (API, a webhook chaos proxy and PayPal fault proxy, a worker with Playwright); Supabase Postgres; Ollama Cloud; PayPal Orders v2, webhooks, verify-webhook-signature, `PayPal-Request-Id`, negative testing; hosted on Render.
 

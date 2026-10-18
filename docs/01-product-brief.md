@@ -6,7 +6,7 @@ An AI agent that shops at your store to break it, then proves the fix, using onl
 
 ## 2. Explain it to a child
 
-Imagine you have a little toy shop. When a friend pays, a message flies over saying "they paid!", and you give them a sticker. Sometimes the message arrives twice by mistake, and you give two stickers instead of one. Checkout Crash Test is a friendly robot that pretends to be a shopper. It plays tricky games with your shop, like sending the "they paid!" message twice or saying a toy costs one penny, to see if your shop gets confused. When it finds a mistake, it shows you exactly what went wrong and how to fix it. Then it plays the same trick again to check the shop is fixed. Nobody uses real money, only pretend money.
+Imagine you have a little toy shop. When a friend pays, a message flies over saying "they paid!", and you give them a sticker. Sometimes the message arrives twice by mistake, and you give two stickers instead of one. FaultLine is a friendly robot that pretends to be a shopper. It plays tricky games with your shop, like sending the "they paid!" message twice or saying a toy costs one penny, to see if your shop gets confused. When it finds a mistake, it shows you exactly what went wrong and how to fix it. Then it plays the same trick again to check the shop is fixed. Nobody uses real money, only pretend money.
 
 ## 3. The user
 
@@ -36,7 +36,7 @@ What we do **not** have and must not invent: a statistic of how many integration
 4. Attack: the agent chooses attacks. A browser buyer completes a real sandbox purchase; the proxies duplicate, reorder, forge, delay or fault PayPal traffic.
 5. Verdict: deterministic invariants compare PayPal's record with the store's record.
 6. Finding: for each failure, the agent explains the root cause citing trace IDs and writes a patch.
-7. Proof: CCT starts a fresh copy of the store with the patch and re-runs the same attack. Red turns green, or the patch is rejected.
+7. Proof: FaultLine starts a fresh copy of the store with the patch and re-runs the same attack. Red turns green, or the patch is rejected.
 8. Report: a shareable page with findings, evidence, patches and before/after results.
 
 ## 6. Scope
@@ -57,7 +57,7 @@ What we do **not** have and must not invent: a statistic of how many integration
 - Production PayPal. Any non-sandbox host.
 - Attacking stores that are not verified as owned by the user.
 - Authorize/void flows, subscriptions, payouts, disputes, vaulting, Braintree.
-- Applying patches to a user's repository. CCT shows the patch; the user merges it.
+- Applying patches to a user's repository. FaultLine shows the patch; the user merges it.
 - Load testing or denial-of-service style traffic.
 - Card-number handling of any kind beyond PayPal's own hosted UI.
 

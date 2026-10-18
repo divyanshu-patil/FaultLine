@@ -5,7 +5,7 @@
 ## 1. Global
 
 - App Router, server components for static content, client components for live views.
-- All data via `lib/api.ts` (typed with `@cct/schemas`) against `/api/*` (same-origin rewrite).
+- All data via `lib/api.ts` (typed with `@faultline/schemas`) against `/api/*` (same-origin rewrite).
 - Persistent top bar: product name, "SANDBOX ONLY" badge (always visible), nav (Runs, Attacks, About), session state.
 - Every screen has loading, empty and error states. Errors show the API `code` and `requestId`.
 - Accessibility: keyboard reachable; focus visible; live regions (`aria-live="polite"`) for new run events; colour is never the only signal (pass/fail also uses text and icons); respects `prefers-reduced-motion`.
@@ -34,7 +34,7 @@ Layout (desktop): left column = phase stepper + agent log; centre = attack timel
 
 - **Phase stepper:** queued → preparing → recon → attacking → diagnosing → patching → verifying → reporting → done. Current phase highlighted; degraded mode banner if applicable.
 - **Agent log:** one row per `agent_step`: tool name as a chip (`run_attack A1`), the model's short "why", and the outcome. Recon shows suspects as a table (question, likely bug?, confidence bar, evidence links).
-- **Attack timeline:** per attack, four swimlanes **Browser · Store · Proxy · PayPal**. Each trace item is a dot with its evidence ID; hover/focus shows a summary; click opens the evidence drawer (S7). Injected faults and forged events are marked "injected by CCT".
+- **Attack timeline:** per attack, four swimlanes **Browser · Store · Proxy · PayPal**. Each trace item is a dot with its evidence ID; hover/focus shows a summary; click opens the evidence drawer (S7). Injected faults and forged events are marked "injected by FaultLine".
 - **Invariant board:** grid of attacks × invariants with pass / fail / not applicable / not run. Fail cells show `expected → actual`.
 - **Findings:** cards with severity, attack, failed invariants, diagnosis status, patch status (rejected / not fixed / verified ✓ / reference fix).
 - Cancel button (confirm dialog).
@@ -61,7 +61,7 @@ Layout (desktop): left column = phase stepper + agent log; centre = attack timel
 - One card per attack from `GET /api/attacks`: what it disturbs, which invariants, real vs simulated, priority.
 
 ### S9. About `/about`
-- How CCT works, safety model (sandbox only, AI never judges, patches only in throwaway copies), limitations, credits.
+- How FaultLine works, safety model (sandbox only, AI never judges, patches only in throwaway copies), limitations, credits.
 
 ## 3. Component list
 

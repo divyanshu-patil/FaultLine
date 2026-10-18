@@ -1,6 +1,6 @@
 # 05. Attack catalog, invariants and seeded bugs
 
-This file is the source of truth for `@cct/core/attacks` and `@cct/core/invariants`. Every attack is data (an `AttackSpec`), not ad-hoc code.
+This file is the source of truth for `@faultline/core/attacks` and `@faultline/core/invariants`. Every attack is data (an `AttackSpec`), not ad-hoc code.
 
 ## 1. Attack spec format
 
@@ -32,7 +32,7 @@ Event names used: `CHECKOUT.ORDER.APPROVED` ✅ (Orders v2 webhook reference), `
 
 ## 2. Invariants
 
-All invariants are pure functions. "Truth" = the worker's direct `GET /v2/checkout/orders/{id}` after settle. "Store" = the state probe snapshot after settle. "Catalog" = the server-side catalog CCT knows for the target (BuggyBeans: `apps/buggybeans/src/catalog.json`, also served at `/__crashtest/catalog`).
+All invariants are pure functions. "Truth" = the worker's direct `GET /v2/checkout/orders/{id}` after settle. "Store" = the state probe snapshot after settle. "Catalog" = the server-side catalog FaultLine knows for the target (BuggyBeans: `apps/buggybeans/src/catalog.json`, also served at `/__crashtest/catalog`).
 
 | ID | Rule | Fails when (example) |
 | --- | --- | --- |
@@ -92,7 +92,7 @@ Status consistency (I4):
 | Invariants | I5, I4 |
 | Buggy result | store marks the order `paid` and grants credits; PayPal truth shows `CREATED`, no capture → **I5 fails** |
 | Fixed result | store calls verify-webhook-signature, gets non-SUCCESS, answers 400, nothing granted |
-| Real vs simulated | the order is real; the webhook is forged by CCT (labelled) |
+| Real vs simulated | the order is real; the webhook is forged by FaultLine (labelled) |
 | Reference fix | verify every event with `POST /v1/notifications/verify-webhook-signature` (`webhook_id` = `PAYPAL_WEBHOOK_ID`) before acting, and re-fetch the order |
 
 ### A4 — Capture times out after success (Must)
@@ -106,7 +106,7 @@ Status consistency (I4):
 | Invariants | I1, I4, I6 |
 | Buggy result | store marks order `failed`, shows "payment failed", ignores the later COMPLETED webhook for a failed order; PayPal shows COMPLETED → **I4 and I6 fail** (customer charged, no credits) |
 | Fixed result | store retries capture with the **same** `PayPal-Request-Id` (PayPal returns the earlier result ✅ doc example) or re-reads the order; marks `paid`, grants once |
-| Real vs simulated | capture real; the timeout is injected by CCT (labelled) |
+| Real vs simulated | capture real; the timeout is injected by FaultLine (labelled) |
 | Reference fix | `PayPal-Request-Id` per capture attempt (stable per order), retry on timeout/5xx, reconcile via GET order, webhook path idempotent |
 
 ### A5 — Price tampering (Must)

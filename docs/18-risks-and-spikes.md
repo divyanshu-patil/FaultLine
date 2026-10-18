@@ -43,20 +43,19 @@ Likelihood and impact are the author's judgement (H/M/L).
 | R16 | Laya/Jev costs after 31 Oct | L | L | off by default | — |
 | R17 | Flaky sandbox UI makes evals noisy | M | M | retry buyer once on infra errors; report infra errors separately from findings | — |
 
-## 3. Go/no-go record (fill in)
+## 3. Go/no-go record
 
 | Date | Gate / spike | Result | Decision |
 | --- | --- | --- | --- |
-| | S0 | | |
-| | S1 | | |
-| | S2 | | |
-| | S3 | | |
-| | S4 | | |
-| | S5 | | |
-| | S6 | | |
-| | S7 | | |
-| | S8 | | |
-| | S9 | | |
+| 2026-10-19 | S0 | Token ✅ (`expires_in` 32399, `app_id` returned). Create order `201 {id, status:"CREATED", links[rel=approve → www.sandbox.paypal.com/checkoutnow?token=<id>]}` ✅. GET order shows `payee.merchant_id`. Capture on an unapproved order → `422 ORDER_NOT_APPROVED` ✅ | shapes recorded in `docs/07` |
+| 2026-10-19 | S1 | Not run: only the sandbox buyer **email** is available, not the password. Card approval (`confirm-payment-source` with sandbox cards) → `422 PAYER_CANNOT_PAY`; card in create → `422 PAYEE_NOT_ENABLED_FOR_CARD_PROCESSING` (business account lacks ACDC) | buyer approval is pluggable (`BUYER_APPROVAL=login|card|assisted|fake`); `login` needs `SANDBOX_BUYER_PASSWORD`; `card` needs ACDC enabled on the sandbox app; `assisted` (FB3) works with no extra secret |
+| | S2 | pending (needs tunnel + approved order) | |
+| | S3 | pending | fixed store dedupes by event id regardless of verification |
+| | S4 | pending (needs an approved order) | fixed store also reconciles via GET order |
+| 2026-10-19 | S5 | `PayPal-Mock-Response: {"mock_application_codes":"INSTRUMENT_DECLINED"}` on capture → real `422 {details[0].issue:"INSTRUMENT_DECLINED"}` ✅, even before approval; order stays `CREATED` | A7 uses real negative testing |
+| 2026-10-19 | S6 | `/api/tags` lists `gemma4:31b` ✅. Native tool calls 5/5 valid, JSON-object protocol 5/5 valid (often wrapped in ```json fences), `format:"json"` not honoured (0/5). Latency p50 ≈ 1.6 s, max 2.1 s. `prompt_eval_count`/`eval_count` present on native replies | `OLLAMA_MODEL=gemma4:31b`, `TOOL_PROTOCOL=native` (json supported as fallback), no `format` |
+| 2026-10-19 | S8 | Local Postgres 15 available; Supabase deferred by owner | plain `pg`; SSE polls `run_events` (no LISTEN/NOTIFY dependency) |
+| 2026-10-19 | S9 | Node 24.10 strips TypeScript natively (workspace symlinks included); `node:sqlite` built in | services and patched BuggyBeans run from `.ts` source, no `tsup` build |
 | | G0 (21 Oct) | | |
 | | G1 (26 Oct) | | |
 | | G2 (1 Nov) | | |

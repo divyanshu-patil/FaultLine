@@ -27,7 +27,7 @@ Assumption (judgement): one developer, ~8 focused hours/day with a coding agent.
 
 | ID | Task | Est. h | Done when |
 | --- | --- | --- | --- |
-| P0-1 | Create PayPal developer account, sandbox business + personal accounts, `cct-buggybeans` REST app; Supabase project; Ollama Cloud key; Render account | 2 | credentials in a password manager; `.env` local |
+| P0-1 | Create PayPal developer account, sandbox business + personal accounts, `faultline-buggybeans` REST app; Supabase project; Ollama Cloud key; Render account | 2 | credentials in a password manager; `.env` local |
 | P0-2 | Spike S0: token, create order, capture via curl; record response shapes into `docs/07` | 2 | shapes pasted, marks updated |
 | P0-3 | Spike S1: Playwright approves a sandbox order in the popup headless and headed; decide buyer approach | 4 | decision recorded in `docs/18` |
 | P0-4 | Spike S2+S3: tunnel + webhook registration; observe real deliveries; replay one byte-for-byte and verify via postback | 3 | event names, order-id path, replay result recorded |
@@ -43,23 +43,23 @@ Assumption (judgement): one developer, ~8 focused hours/day with a coding agent.
 | ID | Task | Est. h |
 | --- | --- | --- |
 | P1-1 | Turborepo scaffold, config package, CI skeleton (lint, typecheck, test, prod-host grep, gitleaks) | 3 |
-| P1-2 | `@cct/schemas` (probe, rules, attack spec, API DTOs, run events, agent contracts) | 4 |
-| P1-3 | `@cct/db`: Drizzle schema (all tables in `docs/08`), migrations, queue claim, notify | 5 |
+| P1-2 | `@faultline/schemas` (probe, rules, attack spec, API DTOs, run events, agent contracts) | 4 |
+| P1-3 | `@faultline/db`: Drizzle schema (all tables in `docs/08`), migrations, queue claim, notify | 5 |
 | P1-4 | `apps/buggybeans` fixed form: catalog, orders, capture, webhooks with verification, probe, pages, checkout.js | 8 |
 | P1-5 | BuggyBeans bug paths B1, B3, B4, B5, B7 + variant renderer | 5 |
-| P1-6 | `@cct/paypal` (allowlist, token cache, truth reads) + `@cct/trace` (recorder, evidence IDs, redaction) | 5 |
+| P1-6 | `@faultline/paypal` (allowlist, token cache, truth reads) + `@faultline/trace` (recorder, evidence IDs, redaction) | 5 |
 | P1-7 | `apps/proxy`: hooks ingress + correlation + pass-through; PayPal forward with recording; instance gateway | 7 |
 | P1-8 | `apps/worker`: job loop, run state machine skeleton, instance manager (baseline instances) | 6 |
 | P1-9 | Scripted buyer (S1 outcome) | 4 |
 | P1-10 | `apps/api`: health, session, targets (presets), runs create/get/events/stream | 6 |
 
-**Gate G1 (Mon 26 Oct):** one real sandbox purchase on a CCT-started BuggyBeans instance, fully recorded (pc-, wh-, wf-, br-, st-, tr- items visible via API). (AC-13, AC-16, AC-20, AC-30)
+**Gate G1 (Mon 26 Oct):** one real sandbox purchase on a FaultLine-started BuggyBeans instance, fully recorded (pc-, wh-, wf-, br-, st-, tr- items visible via API). (AC-13, AC-16, AC-20, AC-30)
 
 ### Phase 2 — Attacks and verdicts (Tue 27 Oct – Sun 1 Nov)
 
 | ID | Task | Est. h |
 | --- | --- | --- |
-| P2-1 | `@cct/core` attack specs A1, A3, A4, A5, A7 | 3 |
+| P2-1 | `@faultline/core` attack specs A1, A3, A4, A5, A7 | 3 |
 | P2-2 | Invariants I1–I7, table-driven tests | 5 |
 | P2-3 | Webhook rules: duplicate, hold/release, drop, forge | 6 |
 | P2-4 | Fault rules: timeout_after_forward, negative_test, latency, error_before_forward | 4 |
@@ -74,11 +74,11 @@ Assumption (judgement): one developer, ~8 focused hours/day with a coding agent.
 
 | ID | Task | Est. h |
 | --- | --- | --- |
-| P3-1 | `@cct/agent` Ollama client, mutex, retries, model_calls logging, FakeOllama | 4 |
+| P3-1 | `@faultline/agent` Ollama client, mutex, retries, model_calls logging, FakeOllama | 4 |
 | P3-2 | Recon (excerpts, suspect questions, parsing, fallback) | 4 |
 | P3-3 | Planner loop + tools + JSON/native protocols + budgets + degradation | 7 |
 | P3-4 | Diagnosis + evidence validation + category check + template fallback | 5 |
-| P3-5 | `@cct/patch` parse/apply/guard; patched instance build/start | 6 |
+| P3-5 | `@faultline/patch` parse/apply/guard; patched instance build/start | 6 |
 | P3-6 | Verify re-run + reference fix path | 3 |
 | P3-7 | Injection variant + agent eval (`eval:agent`) | 4 |
 | P3-8 | Finding page (diagnosis, diff, proof cards) | 5 |
