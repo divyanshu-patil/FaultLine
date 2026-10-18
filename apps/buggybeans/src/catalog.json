@@ -1,0 +1,32 @@
+[
+  {
+    "sku": "house-blend",
+    "name": "House Blend 250 g",
+    "price": "12.00",
+    "currency": "USD",
+    "creditsPerItem": 100,
+    "roast": "Medium",
+    "notes": "Milk chocolate, toasted hazelnut, brown sugar",
+    "color": "#b5683b"
+  },
+  {
+    "sku": "dark-roast",
+    "name": "Midnight Dark Roast 250 g",
+    "price": "14.00",
+    "currency": "USD",
+    "creditsPerItem": 100,
+    "roast": "Dark",
+    "notes": "Cacao nib, molasses, smoked cedar",
+    "color": "#3b2a22"
+  },
+  {
+    "sku": "decaf",
+    "name": "Swiss Water Decaf 250 g",
+    "price": "13.00",
+    "currency": "USD",
+    "creditsPerItem": 100,
+    "roast": "Medium-light",
+    "notes": "Red apple, honey, almond",
+    "color": "#c9a46b"
+  }
+]
