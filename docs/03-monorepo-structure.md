@@ -210,6 +210,7 @@ These replace the matching lines above; each one removes a dependency or a build
 | Topic | Plan said | Built as | Why |
 | --- | --- | --- | --- |
 | Package scope / names | `@cct/*`, `CCT_MODE`, `cct_session` | `@faultline/*`, `FAULTLINE_MODE`, `fl_session` | project renamed to FaultLine |
+| API service | Express 5 (TS) | **FastAPI (Python)** in `apps/api/` (own venv, pyproject); same Postgres schema; pydantic DTOs; `pytest` + `httpx`; run with `python run.py` | owner decision (ADR-017); all other services stay Express/TS |
 | TypeScript runtime | `tsup` builds to `dist/` | Node 24 native type stripping runs `src/*.ts`; `erasableSyntaxOnly` | S9: no build step for services or patched stores |
 | BuggyBeans SQLite | `better-sqlite3` | `node:sqlite` (built in) | no native addon; patch guard allows `node:sqlite` |
 | Database access | Drizzle | plain `pg` + SQL migrations in `packages/db/migrations`; tests use PGlite (in-process Postgres) | one SQL dialect, real Postgres semantics in tests without a second repository fake |

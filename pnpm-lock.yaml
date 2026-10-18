@@ -8,9 +8,30 @@ importers:
 
   .:
     devDependencies:
+      '@faultline/core':
+        specifier: workspace:*
+        version: link:packages/core
+      '@faultline/db':
+        specifier: workspace:*
+        version: link:packages/db
       '@faultline/eslint-config':
         specifier: workspace:*
         version: link:packages/eslint-config
+      '@faultline/patch':
+        specifier: workspace:*
+        version: link:packages/patch
+      '@faultline/paypal':
+        specifier: workspace:*
+        version: link:packages/paypal
+      '@faultline/schemas':
+        specifier: workspace:*
+        version: link:packages/schemas
+      '@faultline/testing':
+        specifier: workspace:*
+        version: link:packages/testing
+      '@faultline/trace':
+        specifier: workspace:*
+        version: link:packages/trace
       '@faultline/typescript-config':
         specifier: workspace:*
         version: link:packages/typescript-config

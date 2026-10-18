@@ -41,7 +41,7 @@ The buyer's browser session (Playwright) also talks to PayPal's hosted approval 
 | Component | Path | Responsibility | Talks to |
 | --- | --- | --- | --- |
 | Web UI | `apps/web` | Pages: home, targets, new run, live run, finding, report, attack catalog. No route handlers, no DB | `apps/api` via `/api/*` |
-| API | `apps/api` | Sessions (access code), targets, runs, findings, reports, SSE run stream, enqueue jobs | Postgres |
+| API | `apps/api` (FastAPI, Python; ADR-017) | Sessions (access code), targets, runs, findings, reports, SSE run stream, enqueue jobs | Postgres |
 | Worker | `apps/worker` | Claims jobs; runs the run state machine; agent loop; attack executor; Playwright buyer; invariant checks; instance manager for BuggyBeans; patch apply + verify | Postgres, Ollama, PayPal (read truth), proxy control API, BuggyBeans |
 | Proxy | `apps/proxy` (deployed inside the engine, §12) | **Instance gateway:** serves BuggyBeans instances publicly under `/i/<instanceId>/`. **Webhook chaos proxy:** ingress for PayPal webhooks, record raw delivery, correlate to run, forward / hold / replay / reorder / forge. **API fault proxy:** forwards a target's PayPal REST calls to the sandbox, records them, injects faults per run rules | PayPal sandbox, BuggyBeans, Postgres |
 | Victim store | `apps/buggybeans` | Coffee shop with loyalty credits. PayPal JS SDK buttons, server-side create/capture, webhook handler, seeded bugs B1–B8 switched by env, state probe | PayPal (via proxy), its own SQLite |
@@ -212,6 +212,7 @@ Local mode can run everything with `pnpm dev` (engine + api + web + Postgres via
 | ADR-014 | SSE via Postgres LISTEN/NOTIFY | Supabase Realtime, websockets | Simple, one data path | Many concurrent viewers |
 | ADR-015 | Next.js same-origin `/api/*` rewrite; httpOnly cookie session | CORS + cross-site cookies | Avoids the SameSite cookie gap found in the previous project | — |
 | ADR-016 | Jev/Laya optional behind `CLASSIFIER_PROVIDER` | Required | New models, unclear access/cost after 31 Oct ✅ | They prove reliable and cheap |
+| ADR-017 | `apps/api` is **FastAPI (Python)**; worker, proxy, BuggyBeans and web stay TypeScript | Express 5 (ADR-002) | Owner decision (2026-10-19). The API shares the Postgres schema with the TS worker, so the split is clean; pydantic mirrors the zod DTOs | A second runtime becomes a hosting burden |
 
 ## 14. Open questions (settled by spikes in `docs/18`)
 

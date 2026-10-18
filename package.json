@@ -13,10 +13,19 @@
     "setup:webhook": "node --env-file-if-exists=.env scripts/setup-webhook.ts",
     "eval:bugs": "node --env-file-if-exists=.env --disable-warning=ExperimentalWarning scripts/eval-bugs.ts",
     "eval:agent": "node --env-file-if-exists=.env --disable-warning=ExperimentalWarning scripts/eval-agent.ts",
-    "format": "prettier --write \"**/*.{ts,tsx,md}\""
+    "format": "prettier --write \"**/*.{ts,tsx,md}\"",
+    "seed": "node --env-file-if-exists=.env --disable-warning=ExperimentalWarning scripts/seed.ts",
+    "test:api": "cd apps/api && .venv/bin/python -m pytest -q"
   },
   "devDependencies": {
+    "@faultline/core": "workspace:*",
+    "@faultline/db": "workspace:*",
     "@faultline/eslint-config": "workspace:*",
+    "@faultline/patch": "workspace:*",
+    "@faultline/paypal": "workspace:*",
+    "@faultline/schemas": "workspace:*",
+    "@faultline/testing": "workspace:*",
+    "@faultline/trace": "workspace:*",
     "@faultline/typescript-config": "workspace:*",
     "@types/node": "26.4.1",
     "eslint": "10.9.1",

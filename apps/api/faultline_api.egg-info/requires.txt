@@ -1,0 +1,10 @@
+fastapi<0.121,>=0.115
+uvicorn[standard]<0.40,>=0.34
+psycopg[binary,pool]<3.4,>=3.2
+pydantic<3,>=2.9
+python-dotenv<2,>=1.0
+
+[dev]
+httpx<0.29,>=0.27
+pytest<9,>=8.3
+pytest-asyncio<1,>=0.24
