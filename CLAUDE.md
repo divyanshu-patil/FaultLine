@@ -1,0 +1,1 @@
+Read `AGENTS.md` in this directory first and follow it. Specs are in `docs/`; start with `docs/02-architecture.md` and `docs/13-implementation-plan.md`. Visual design rules are in `docs/design.md` (owner-provided). Judging context is in `judging.md`.
