@@ -15,7 +15,8 @@
     "eval:agent": "node --env-file-if-exists=.env --disable-warning=ExperimentalWarning scripts/eval-agent.ts",
     "format": "prettier --write \"**/*.{ts,tsx,md}\"",
     "seed": "node --env-file-if-exists=.env --disable-warning=ExperimentalWarning scripts/seed.ts",
-    "test:api": "cd apps/api && .venv/bin/python -m pytest -q"
+    "test:api": "cd apps/api && .venv/bin/python -m pytest -q",
+    "seed:demo": "node --env-file-if-exists=.env --disable-warning=ExperimentalWarning scripts/seed-demo.ts"
   },
   "devDependencies": {
     "@faultline/agent": "workspace:*",

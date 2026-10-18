@@ -1,0 +1,50 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="380" viewBox="0 0 1200 380" role="img" aria-labelledby="t d">
+  <title id="t">FaultLine</title>
+  <desc id="d">An AI agent that places real PayPal sandbox orders to break a checkout integration, then explains and proves the fix. Deterministic checks, not the AI, decide pass or fail.</desc>
+  <defs>
+    <style>
+      .dsp{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;}
+      .mono{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;}
+    </style>
+  </defs>
+  <rect width="1200" height="380" rx="24" fill="#ffffff"/>
+  <rect x="1" y="1" width="1198" height="378" rx="23" fill="none" stroke="#e8e8e8"/>
+
+  <!-- title block -->
+  <g transform="translate(64 66)">
+    <text class="mono" x="2" y="0" font-size="17" letter-spacing="3" fill="#816729">PAYPAL SANDBOX · GEMMA 4 ON OLLAMA CLOUD</text>
+    <text class="dsp" x="0" y="78" font-size="92" font-weight="500" letter-spacing="-3" fill="#202020">FaultLine</text>
+    <path d="M4 96 H402" stroke="#ff682c" stroke-width="5" transform="skewY(-1.4)"/>
+    <text class="dsp" x="2" y="150" font-size="30" font-weight="500" fill="#202020">An AI agent that shops at your store</text>
+    <text class="dsp" x="2" y="188" font-size="30" font-weight="500" fill="#ff682c">to break it.</text>
+    <text class="dsp" x="2" y="236" font-size="18" fill="#4d4d4d">Real sandbox purchases. Duplicate, reordered, forged and</text>
+    <text class="dsp" x="2" y="261" font-size="18" fill="#4d4d4d">dropped webhooks. The AI never decides pass or fail —</text>
+    <text class="dsp" x="2" y="286" font-size="18" fill="#4d4d4d">deterministic invariant checks do.</text>
+  </g>
+
+  <!-- the loop, as proof of mechanism -->
+  <g transform="translate(726 70)">
+    <rect x="0" y="0" width="410" height="250" rx="18" fill="#efefef"/>
+    <text class="mono" x="26" y="36" font-size="15" letter-spacing="2" fill="#816729">THE LOOP · PER BUG</text>
+    <g class="dsp" font-size="17" fill="#202020">
+      <g transform="translate(26 62)">
+        <circle cx="7" cy="12" r="6" fill="#202020"/><text x="26" y="17">Recon — read the payment code</text>
+      </g>
+      <g transform="translate(26 92)">
+        <circle cx="7" cy="12" r="6" fill="#202020"/><text x="26" y="17">Attack — real buyer, disturbed webhooks</text>
+      </g>
+      <g transform="translate(26 122)">
+        <circle cx="7" cy="12" r="6" fill="#ff682c"/><text x="26" y="17" fill="#ff682c">Verdict — checker compares PayPal's record</text>
+      </g>
+      <g transform="translate(26 152)">
+        <circle cx="7" cy="12" r="6" fill="#202020"/><text x="26" y="17">Diagnose — cite evidence IDs</text>
+      </g>
+      <g transform="translate(26 182)">
+        <circle cx="7" cy="12" r="6" fill="#202020"/><text x="26" y="17">Patch — small guarded fix</text>
+      </g>
+      <g transform="translate(26 212)">
+        <circle cx="7" cy="12" r="6" fill="#2f6b45"/><text x="26" y="17">Prove — re-run; red turns green</text>
+      </g>
+    </g>
+  </g>
+</svg>
