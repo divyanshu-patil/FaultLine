@@ -15,9 +15,11 @@ const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
 type Server = { port: number; close: () => void };
 
-function listen(app: { listen: (port: number, host: string, cb: () => void) => { address: () => AddressInfo | null; close: (cb?: () => void) => void } }): Promise<Server> {
+function listen(app: { listen: (...args: never[]) => { address: () => AddressInfo | string | null; close: () => void } }): Promise<Server> {
   return new Promise((resolve) => {
-    const s = app.listen(0, "127.0.0.1", () => resolve({ port: (s.address() as AddressInfo).port, close: () => s.close() }));
+    const s = (app.listen as (port: number, host: string, cb: () => void) => { address: () => AddressInfo | string | null; close: () => void })(0, "127.0.0.1", () =>
+      resolve({ port: (s.address() as AddressInfo).port, close: () => s.close() }),
+    );
   });
 }
 
