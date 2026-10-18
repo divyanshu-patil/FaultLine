@@ -1,4 +1,4 @@
-import type { Verdict } from "../lib/api";
+import type { Verdict } from "../lib/types";
 
 const ALL_INVARIANTS = ["I1", "I2", "I3", "I4", "I5", "I6", "I7"];
 

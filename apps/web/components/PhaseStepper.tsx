@@ -1,4 +1,4 @@
-import { PHASES } from "../lib/api";
+import { PHASES } from "../lib/types";
 
 const LABELS: Record<string, string> = {
   queued: "Queued", preparing: "Preparing", recon: "Recon", attacking: "Attacking",

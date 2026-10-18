@@ -7,7 +7,7 @@ import { PhaseStepper } from "../../../components/PhaseStepper";
 import { InvariantBoard } from "../../../components/InvariantBoard";
 import { Chip } from "../../../components/Chip";
 import { useRunStream } from "../../../lib/useRunStream";
-import type { RunDetail, Finding, Verdict } from "../../../lib/api";
+import type { RunDetail, Finding, Verdict } from "../../../lib/types";
 
 const LANES: [string, string[]][] = [
   ["Browser", ["browser_step"]],
@@ -24,18 +24,20 @@ export default function RunPage() {
   const { runId } = useParams<{ runId: string }>();
   const [run, setRun] = useState<RunDetail | null>(null);
   const [trace, setTrace] = useState<TraceItem[]>([]);
+  const [history, setHistory] = useState<{ kind: string; payload: Record<string, unknown> }[]>([]);
   const [notFound, setNotFound] = useState(false);
   const done = run ? DONE.has(run.status) : false;
-  const events = useRunStream(runId, done);
+  const liveEvents = useRunStream(runId, done);
 
   useEffect(() => {
     let stop = false;
     async function load() {
-      const [r, t] = await Promise.all([fetch(`/api/runs/${runId}`), fetch(`/api/runs/${runId}/trace`)]);
+      const [r, t, e] = await Promise.all([fetch(`/api/runs/${runId}`), fetch(`/api/runs/${runId}/trace`), fetch(`/api/runs/${runId}/events?after=0`)]);
       if (stop) return;
       if (r.status === 404) return setNotFound(true);
       if (r.ok) setRun(await r.json());
       if (t.ok) setTrace(await t.json());
+      if (e.ok) setHistory(await e.json());
     }
     load();
     const interval = done ? null : setInterval(load, 2500);
@@ -44,7 +46,7 @@ export default function RunPage() {
       if (interval) clearInterval(interval);
     };
     // re-arm when the run reaches a terminal state
-  }, [runId, done, events.length]);
+  }, [runId, done, liveEvents.length]);
 
   if (notFound)
     return (
@@ -68,7 +70,8 @@ export default function RunPage() {
     );
 
   const degraded = run.mode === "agent" && run.effectiveMode === "checklist";
-  const agentLog = events.filter((e) => e.kind === "agent_step" || e.kind === "suspects" || e.kind === "degraded" || e.kind === "info");
+  const LOG_KINDS = ["agent_step", "suspects", "attack_finished", "diagnosis", "patch", "degraded", "info"];
+  const agentLog = [...history, ...liveEvents].filter((e) => LOG_KINDS.includes(e.kind));
 
   return (
     <main className="section">
@@ -113,14 +116,20 @@ export default function RunPage() {
                 </p>
               ) : (
                 <ul style={{ listStyle: "none", padding: 0, margin: 0, display: "grid", gap: 10 }} aria-live="polite">
-                  {agentLog.map((e, i) => (
-                    <li key={i} style={{ fontSize: 13, display: "flex", gap: 8 }}>
-                      <span className="chip tag" style={{ flex: "none" }}>
-                        {String((e.payload.tool as string) ?? e.kind)}
-                      </span>
-                      <span className="muted">{String(e.payload.why ?? e.payload.summary ?? e.payload.reason ?? "")}</span>
-                    </li>
-                  ))}
+                  {agentLog.map((e, i) => {
+                    const p = e.payload;
+                    const label = String(p.tool ?? p.attackId ?? e.kind.replace(/_/g, " "));
+                    const failed = Array.isArray(p.failed) ? ` failed ${(p.failed as string[]).join(", ")}` : "";
+                    const text = String(p.why ?? p.summary ?? p.root_cause ?? p.reason ?? (p.status ? `${e.kind} ${p.status}` : "")) + failed;
+                    return (
+                      <li key={i} style={{ fontSize: 13, display: "flex", gap: 8 }}>
+                        <span className="chip tag" style={{ flex: "none" }}>
+                          {label}
+                        </span>
+                        <span className="muted">{text}</span>
+                      </li>
+                    );
+                  })}
                 </ul>
               )}
             </div>

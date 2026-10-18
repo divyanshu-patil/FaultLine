@@ -1,0 +1,41 @@
+# Render blueprint. Secrets (PayPal, Ollama, SESSION_SECRET) are set in the dashboard, never here.
+databases:
+  - name: faultline-db
+    databaseName: faultline
+    plan: free
+
+services:
+  - type: web
+    name: faultline-api
+    runtime: python
+    rootDir: apps/api
+    plan: free
+    buildCommand: pip install .
+    preDeployCommand: python -m app.migrate
+    startCommand: python run.py
+    healthCheckPath: /api/health
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase: { name: faultline-db, property: connectionString }
+      - key: PAYPAL_API_HOST
+        value: https://api-m.sandbox.paypal.com
+      - key: FAULTLINE_MODE
+        value: hosted
+      - key: COOKIE_SECURE
+        value: "true"
+      - { key: PAYPAL_CLIENT_ID, sync: false }
+      - { key: PAYPAL_CLIENT_SECRET, sync: false }
+      - { key: OLLAMA_API_KEY, sync: false }
+      - { key: SESSION_SECRET, generateValue: true }
+      - { key: ACCESS_CODES, sync: false }
+
+  - type: web
+    name: faultline-web
+    runtime: node
+    rootDir: .
+    plan: free
+    buildCommand: corepack enable && pnpm install && pnpm --filter web build
+    startCommand: pnpm --filter web start
+    envVars:
+      - key: API_ORIGIN
+        fromService: { type: web, name: faultline-api, property: hostport }

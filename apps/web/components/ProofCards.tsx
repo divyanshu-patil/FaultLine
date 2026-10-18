@@ -1,4 +1,4 @@
-import type { Verdict } from "../lib/api";
+import type { Verdict } from "../lib/types";
 import { Chip } from "./Chip";
 
 function VerdictList({ verdicts }: { verdicts: Verdict[] }) {
