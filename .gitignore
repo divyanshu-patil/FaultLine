@@ -43,3 +43,4 @@ spikes-out/
 eval/results/*.raw.json
 playwright-report/
 test-results/
+eval/results/*.json

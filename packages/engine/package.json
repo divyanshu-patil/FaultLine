@@ -1,0 +1,14 @@
+{
+  "name": "@faultline/engine",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": { ".": "./src/index.ts" },
+  "dependencies": {
+    "@faultline/core": "workspace:*",
+    "@faultline/schemas": "workspace:*",
+    "@faultline/testing": "workspace:*",
+    "buggybeans": "workspace:*",
+    "proxy": "workspace:*"
+  }
+}

@@ -17,6 +17,9 @@ importers:
       '@faultline/db':
         specifier: workspace:*
         version: link:packages/db
+      '@faultline/engine':
+        specifier: workspace:*
+        version: link:packages/engine
       '@faultline/eslint-config':
         specifier: workspace:*
         version: link:packages/eslint-config
@@ -154,6 +157,24 @@ importers:
       '@types/pg':
         specifier: 8.23.1
         version: 8.23.1
+
+  packages/engine:
+    dependencies:
+      '@faultline/core':
+        specifier: workspace:*
+        version: link:../core
+      '@faultline/schemas':
+        specifier: workspace:*
+        version: link:../schemas
+      '@faultline/testing':
+        specifier: workspace:*
+        version: link:../testing
+      buggybeans:
+        specifier: workspace:*
+        version: link:../../apps/buggybeans
+      proxy:
+        specifier: workspace:*
+        version: link:../../apps/proxy
 
   packages/eslint-config:
     devDependencies:

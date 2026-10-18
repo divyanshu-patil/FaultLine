@@ -22,6 +22,7 @@
     "@faultline/agent": "workspace:*",
     "@faultline/core": "workspace:*",
     "@faultline/db": "workspace:*",
+    "@faultline/engine": "workspace:*",
     "@faultline/eslint-config": "workspace:*",
     "@faultline/patch": "workspace:*",
     "@faultline/paypal": "workspace:*",
