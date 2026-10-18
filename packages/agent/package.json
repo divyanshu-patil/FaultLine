@@ -1,0 +1,14 @@
+{
+  "name": "@faultline/agent",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": { ".": "./src/index.ts" },
+  "dependencies": {
+    "@faultline/core": "workspace:*",
+    "@faultline/patch": "workspace:*",
+    "@faultline/schemas": "workspace:*",
+    "@faultline/trace": "workspace:*"
+  },
+  "devDependencies": { "@faultline/testing": "workspace:*" }
+}

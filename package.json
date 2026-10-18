@@ -18,6 +18,7 @@
     "test:api": "cd apps/api && .venv/bin/python -m pytest -q"
   },
   "devDependencies": {
+    "@faultline/agent": "workspace:*",
     "@faultline/core": "workspace:*",
     "@faultline/db": "workspace:*",
     "@faultline/eslint-config": "workspace:*",

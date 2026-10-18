@@ -172,7 +172,7 @@ export const Suspect = z.object({
   q: SuspectQuestion,
   likely_bug: z.boolean(),
   confidence: z.number().min(0).max(1),
-  evidence: z.array(z.string().regex(/^src-\d{4}$/)).min(1),
+  evidence: z.array(z.string().regex(/^src-\d{4}$/)).max(8).default([]),
   reason: z.string().max(400),
 });
 export type Suspect = z.infer<typeof Suspect>;

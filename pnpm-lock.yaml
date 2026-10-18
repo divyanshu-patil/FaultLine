@@ -8,6 +8,9 @@ importers:
 
   .:
     devDependencies:
+      '@faultline/agent':
+        specifier: workspace:*
+        version: link:packages/agent
       '@faultline/core':
         specifier: workspace:*
         version: link:packages/core
@@ -103,6 +106,25 @@ importers:
       typescript:
         specifier: 7.0.2
         version: 7.0.2
+
+  packages/agent:
+    dependencies:
+      '@faultline/core':
+        specifier: workspace:*
+        version: link:../core
+      '@faultline/patch':
+        specifier: workspace:*
+        version: link:../patch
+      '@faultline/schemas':
+        specifier: workspace:*
+        version: link:../schemas
+      '@faultline/trace':
+        specifier: workspace:*
+        version: link:../trace
+    devDependencies:
+      '@faultline/testing':
+        specifier: workspace:*
+        version: link:../testing
 
   packages/core:
     dependencies:
