@@ -1,0 +1,17 @@
+{
+  "extends": "./packages/typescript-config/base.json",
+  "compilerOptions": {
+    "lib": ["ES2023", "DOM"],
+    "target": "ES2023",
+    "types": ["node"],
+    "noEmit": true,
+    "declaration": false,
+    "declarationMap": false,
+    "allowImportingTsExtensions": true,
+    "erasableSyntaxOnly": true,
+    "verbatimModuleSyntax": true,
+    "noUnusedLocals": true
+  },
+  "include": ["packages/*/src", "packages/*/test", "apps/api", "apps/proxy", "apps/worker", "apps/buggybeans", "scripts", "vitest.config.ts"],
+  "exclude": ["**/node_modules", "apps/web"]
+}

@@ -35,6 +35,11 @@ export const config = [
     },
   },
   {
-    ignores: ["dist/**"],
+    // TypeScript owns these checks (noUnusedLocals, strict); the babel parser has no type-aware scope.
+    files: ["**/*.ts", "**/*.tsx"],
+    rules: { "no-unused-vars": "off", "no-undef": "off", "no-redeclare": "off" },
+  },
+  {
+    ignores: ["dist/**", "**/.next/**", "**/node_modules/**", "coverage/**"],
   },
 ];

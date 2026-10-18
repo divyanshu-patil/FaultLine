@@ -36,3 +36,10 @@ yarn-error.log*
 # Misc
 .DS_Store
 *.pem
+
+# FaultLine
+.tmp/
+spikes-out/
+eval/results/*.raw.json
+playwright-report/
+test-results/
