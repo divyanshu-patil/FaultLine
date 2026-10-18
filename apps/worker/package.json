@@ -1,0 +1,23 @@
+{
+  "name": "worker",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "node --env-file-if-exists=../../.env --disable-warning=ExperimentalWarning --watch src/server.ts",
+    "start": "node --disable-warning=ExperimentalWarning src/server.ts"
+  },
+  "dependencies": {
+    "@faultline/agent": "workspace:*",
+    "@faultline/core": "workspace:*",
+    "@faultline/db": "workspace:*",
+    "@faultline/engine": "workspace:*",
+    "@faultline/patch": "workspace:*",
+    "@faultline/schemas": "workspace:*",
+    "buggybeans": "workspace:*",
+    "zod": "4.6.7"
+  },
+  "devDependencies": {
+    "@electric-sql/pglite": "0.5.10"
+  }
+}
