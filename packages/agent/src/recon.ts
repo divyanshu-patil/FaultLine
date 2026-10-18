@@ -1,5 +1,5 @@
 import { ReconOutput, type Suspect, type SuspectQuestion } from "@faultline/schemas";
-import { type Ollama, extractJsonObject } from "./ollama.ts";
+import { type ChatMessage, type Ollama, extractJsonObject } from "./ollama.ts";
 import { QUESTION_ATTACK, reconPrompt, PREAMBLE } from "./prompts.ts";
 
 export type SourceExcerpt = { srcId: string; file: string; text: string };
@@ -24,7 +24,7 @@ function wrapSource(excerpts: SourceExcerpt[]): string {
  * attempts, return default suspects. `knownSrcIds` gates evidence to ids the model was actually shown.
  */
 export async function recon(ollama: Ollama, excerpts: SourceExcerpt[], knownSrcIds: ReadonlySet<string>): Promise<{ suspects: Suspect[]; source: "model" | "default" }> {
-  const messages = [
+  const messages: ChatMessage[] = [
     { role: "system" as const, content: PREAMBLE },
     { role: "user" as const, content: reconPrompt(wrapSource(excerpts)) },
   ];

@@ -1,9 +1,53 @@
 {
   "$schema": "https://turborepo.dev/schema.json",
   "ui": "stream",
-  "globalEnv": ["NODE_ENV", "FAULTLINE_MODE"],
+  "globalEnv": [
+    "NODE_ENV",
+    "FAULTLINE_MODE",
+    "DATABASE_URL",
+    "PORT",
+    "HOST",
+    "OLLAMA_API_KEY",
+    "OLLAMA_HOST",
+    "PAYPAL_CLIENT_ID",
+    "PAYPAL_CLIENT_SECRET",
+    "PAYPAL_API_HOST",
+    "PAYPAL_API_BASE",
+    "PAYPAL_WEBHOOK_ID",
+    "SANDBOX_BUYER_EMAIL",
+    "SANDBOX_BUYER_PASSWORD",
+    "SESSION_SECRET",
+    "ACCESS_CODES",
+    "OPERATOR_CODES",
+    "ALLOW_EXTERNAL_TARGETS",
+    "COOKIE_SECURE",
+    "API_ORIGIN",
+    "PROBE_TOKEN",
+    "PUBLIC_URL",
+    "INSTANCE_ID",
+    "SQLITE_PATH",
+    "BUGS",
+    "WEB_ORIGIN",
+    "RUN_ID",
+    "FINDING_ID",
+    "SESSION_TTL_HOURS",
+    "PUBLIC_REPORT_BASE_URL",
+    "APP_VERSION"
+  ],
   "tasks": {
-    "build": { "dependsOn": ["^build"], "outputs": [".next/**", "!.next/cache/**", "!.next/dev/**"] },
-    "dev": { "cache": false, "persistent": true }
+    "build": {
+      "dependsOn": [
+        "^build"
+      ],
+      "outputs": [
+        ".next/**",
+        "!.next/cache/**",
+        "!.next/dev/**"
+      ]
+    },
+    "dev": {
+      "cache": false,
+      "persistent": true
+    }
   }
 }

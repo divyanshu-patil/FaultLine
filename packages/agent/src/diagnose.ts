@@ -1,7 +1,7 @@
 import { categoryAllowed, getAttack } from "@faultline/core";
 import { Diagnosis, type InvariantId, type Verdict } from "@faultline/schemas";
 import { validateEvidenceRefs } from "@faultline/trace";
-import { type Ollama, extractJsonObject } from "./ollama.ts";
+import { type ChatMessage, type Ollama, extractJsonObject } from "./ollama.ts";
 import { PREAMBLE, diagnosisPrompt } from "./prompts.ts";
 
 export type DiagnoseInput = {
@@ -46,7 +46,7 @@ function affectedFor(attackId: string): string[] {
 export async function diagnose(ollama: Ollama, input: DiagnoseInput): Promise<DiagnoseResult> {
   const failed = input.verdicts.filter((v) => v.status === "fail");
   const failedIds = failed.map((v) => v.invariant as InvariantId);
-  const messages = [
+  const messages: ChatMessage[] = [
     { role: "system" as const, content: PREAMBLE },
     {
       role: "user" as const,

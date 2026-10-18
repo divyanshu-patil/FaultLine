@@ -77,7 +77,7 @@ function referenceDiff(attack: string): string {
 }
 
 async function main() {
-  const pool = await createPool(url);
+  const pool = await createPool(url!);
   const db = createDb(pool);
   const sql = pool;
 

@@ -1,4 +1,4 @@
-import express, { type Express, type Request, type Response } from "express";
+import express, { type Express, type Request as Req, type Response as Res } from "express";
 import { SANDBOX_API_HOST, orderIdOfEvent } from "@faultline/paypal";
 import { faultPassthrough, forgeNotProvided, type ForgeEvent, type InjectCaptureFault } from "./stubs.ts";
 
@@ -37,7 +37,7 @@ export type ProxyDeps = {
 };
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
-const headerObj = (req: Request) => Object.fromEntries(Object.entries(req.headers).map(([k, v]) => [k, Array.isArray(v) ? v.join(",") : String(v ?? "")]));
+const headerObj = (req: Req) => Object.fromEntries(Object.entries(req.headers).map(([k, v]) => [k, Array.isArray(v) ? v.join(",") : String(v ?? "")]));
 const PAYPAL_HOP = new Set(["host", "content-length", "connection", "accept-encoding"]);
 
 /**
@@ -68,14 +68,14 @@ export function createProxy(deps: ProxyDeps = {}) {
   async function forwardToStore(reg: RunReg, headers: Record<string, string>, raw: Buffer, outcome: SavedDelivery["outcome"], forged = false) {
     const fwd = Object.fromEntries(Object.entries(headers).filter(([k]) => !PAYPAL_HOP.has(k.toLowerCase())));
     try {
-      const res = await upstream(`http://127.0.0.1:${reg.instance.port}/webhooks/paypal`, { method: "POST", headers: fwd, body: raw });
+      const res = await upstream(`http://127.0.0.1:${reg.instance.port}/webhooks/paypal`, { method: "POST", headers: fwd, body: raw as BodyInit });
       log.info({ msg: "forwarded webhook", instance: reg.instance.instanceId, status: res.status, outcome });
     } catch (e) {
       log.warn({ msg: "forward failed", instance: reg.instance.instanceId, error: String(e) });
     }
   }
 
-  async function handleWebhook(req: Request, res: Response) {
+  async function handleWebhook(req: Req, res: Res) {
     const raw = req.body as Buffer;
     let event: unknown = null;
     try {
@@ -137,17 +137,17 @@ export function createProxy(deps: ProxyDeps = {}) {
   }
 
   // --- PayPal fault proxy: store's PayPal base points here; we pass through to the sandbox. ---
-  async function handlePayPal(req: Request, res: Response) {
-    const instanceId = req.params.instanceId!;
+  async function handlePayPal(req: Req, res: Res) {
+    const instanceId = String(req.params.instanceId);
     const rest = (Array.isArray(req.params.splat) ? req.params.splat.join("/") : (req.params.splat ?? ""));
     const url = `${SANDBOX_API_HOST}/${rest}`;
     const method = req.method;
     const headers = Object.fromEntries(Object.entries(headerObj(req)).filter(([k]) => !PAYPAL_HOP.has(k.toLowerCase())));
     const body = method === "GET" || method === "HEAD" ? undefined : (req.body as Buffer);
 
-    let upstreamRes: Response;
+    let upstreamRes: globalThis.Response;
     try {
-      upstreamRes = await upstream(url, { method, headers, body });
+      upstreamRes = await upstream(url, { method, headers, body: body as BodyInit | undefined });
     } catch (e) {
       log.warn({ msg: "paypal upstream failed", error: String(e) });
       res.status(502).json({ name: "PROXY_UPSTREAM_ERROR" });
@@ -184,8 +184,8 @@ export function createProxy(deps: ProxyDeps = {}) {
   }
 
   // --- instance gateway: /i/:instanceId/* -> the BuggyBeans child process ---
-  async function handleGateway(req: Request, res: Response) {
-    const instanceId = req.params.instanceId!;
+  async function handleGateway(req: Req, res: Res) {
+    const instanceId = String(req.params.instanceId);
     const runId = byInstance.get(instanceId);
     const reg = runId ? runs.get(runId) : undefined;
     if (!reg) {
@@ -197,7 +197,7 @@ export function createProxy(deps: ProxyDeps = {}) {
     const headers = Object.fromEntries(Object.entries(headerObj(req)).filter(([k]) => !PAYPAL_HOP.has(k.toLowerCase())));
     const body = req.method === "GET" || req.method === "HEAD" ? undefined : (req.body as Buffer);
     try {
-      const up = await upstream(`http://127.0.0.1:${reg.instance.port}/${rest}${search}`, { method: req.method, headers, body });
+      const up = await upstream(`http://127.0.0.1:${reg.instance.port}/${rest}${search}`, { method: req.method, headers, body: body as BodyInit | undefined });
       const buf = Buffer.from(await up.arrayBuffer());
       up.headers.forEach((v, k) => {
         if (!PAYPAL_HOP.has(k.toLowerCase()) && k.toLowerCase() !== "content-encoding") res.setHeader(k, v);

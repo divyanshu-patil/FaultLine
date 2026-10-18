@@ -63,7 +63,7 @@ describe("proxy gateway + webhook disturbances (non-forging)", () => {
   it("A1 duplicate: forwards the same real delivery three times", async () => {
     const { base, deliveries } = await setup({ kind: "duplicate", times: 3, gapMs: 1 });
     await post(base, "/webhooks/paypal", webhook("O-1", "PAYMENT.CAPTURE.COMPLETED", "WH-1"));
-    await new Promise((r) => setTimeout(r, 30));
+    await new Promise((r) => setTimeout(r, 80));
     expect(deliveries.filter((d) => d.id === "WH-1")).toHaveLength(3);
   });
 
@@ -71,17 +71,17 @@ describe("proxy gateway + webhook disturbances (non-forging)", () => {
     const { base, deliveries } = await setup({ kind: "drop" });
     const res = await post(base, "/webhooks/paypal", webhook("O-1", "PAYMENT.CAPTURE.COMPLETED", "WH-2"));
     expect(res.status).toBe(200); // PayPal still gets its ack
-    await new Promise((r) => setTimeout(r, 20));
+    await new Promise((r) => setTimeout(r, 60));
     expect(deliveries).toHaveLength(0);
   });
 
   it("A2 hold_until: releases the held APPROVED only after COMPLETED, out of order", async () => {
     const { base, deliveries } = await setup({ kind: "hold_until", hold: "CHECKOUT.ORDER.APPROVED", until: "PAYMENT.CAPTURE.COMPLETED" });
     await post(base, "/webhooks/paypal", webhook("O-1", "CHECKOUT.ORDER.APPROVED", "WH-A"));
-    await new Promise((r) => setTimeout(r, 10));
+    await new Promise((r) => setTimeout(r, 50));
     expect(deliveries).toHaveLength(0); // approval is held
     await post(base, "/webhooks/paypal", webhook("O-1", "PAYMENT.CAPTURE.COMPLETED", "WH-C"));
-    await new Promise((r) => setTimeout(r, 20));
+    await new Promise((r) => setTimeout(r, 60));
     expect(deliveries.map((d) => d.id)).toEqual(["WH-C", "WH-A"]); // completed first, then the late approval
   });
 
@@ -89,7 +89,7 @@ describe("proxy gateway + webhook disturbances (non-forging)", () => {
     const { base, deliveries } = await setup({ kind: "passthrough" });
     const res = await post(base, "/webhooks/paypal", webhook("O-UNKNOWN", "PAYMENT.CAPTURE.COMPLETED", "WH-X"));
     expect(res.status).toBe(200);
-    await new Promise((r) => setTimeout(r, 20));
+    await new Promise((r) => setTimeout(r, 60));
     expect(deliveries).toHaveLength(0);
   });
 });

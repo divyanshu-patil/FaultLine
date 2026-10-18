@@ -56,6 +56,7 @@ export function webhookRoutes(ctx: Ctx): Router {
     }
 
     if (ctx.flags.B3) {
+      // B3: this variant skips PayPal signature verification entirely and trusts the body
     } else {
       const verified = await paypal.verifyWebhook(req.headers, req.body, ctx.webhookId);
       if (!verified) {
