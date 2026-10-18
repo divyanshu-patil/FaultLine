@@ -1,102 +1,113 @@
-import Image, { type ImageProps } from "next/image";
-import { Button } from "@repo/ui/button";
-import styles from "./page.module.css";
+import Link from "next/link";
+import { getJson } from "../lib/api";
 
-type Props = Omit<ImageProps, "src"> & {
-  srcLight: string;
-  srcDark: string;
-};
+const STEPS = [
+  ["Recon", "The agent reads the store's payment code and lists suspects."],
+  ["Attack", "A real sandbox buyer pays; webhooks are duplicated, delayed, forged or dropped."],
+  ["Verdict", "Deterministic checks compare PayPal's record with the store's. Pass or fail."],
+  ["Diagnose", "The agent explains each failure, citing evidence IDs from the trace."],
+  ["Patch", "It writes a small fix, guarded and applied to a throwaway copy."],
+  ["Prove", "The same attack runs again on the patched store. Red turns green — or it doesn't."],
+];
 
-const ThemeImage = (props: Props) => {
-  const { srcLight, srcDark, ...rest } = props;
-
+export default async function Home() {
+  const pinned = await getJson<{ slug: string | null }>("/api/reports/pinned", { authed: false });
   return (
-    <>
-      <Image {...rest} src={srcLight} className="imgLight" />
-      <Image {...rest} src={srcDark} className="imgDark" />
-    </>
-  );
-};
+    <main>
+      <section className="section">
+        <div className="wrap" style={{ display: "grid", gap: 48, gridTemplateColumns: "minmax(0, 1fr)" }}>
+          <div style={{ maxWidth: 760 }}>
+            <div className="eyebrow">PayPal sandbox · Gemma 4 on Ollama Cloud</div>
+            <h1>
+              An AI agent that shops at your store <span className="ember">to break it.</span>
+            </h1>
+            <p style={{ fontSize: 18, maxWidth: 620, marginTop: 20 }}>
+              FaultLine places real PayPal sandbox orders, then recreates the conditions that break real integrations — duplicate and out-of-order webhooks, a
+              forged event, a capture that times out after the money moved, a tampered price, a declined payment. Then it explains the cause and proves the fix.
+            </p>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: 12, marginTop: 28 }}>
+              <Link className="btn ember" href="/runs/new?target=buggybeans:demo&mode=agent">
+                Run the demo crash test →
+              </Link>
+              {pinned?.slug ? (
+                <Link className="btn ghost" href={`/reports/${pinned.slug}`}>
+                  See a finished report
+                </Link>
+              ) : null}
+              <Link className="btn ghost" href="/attacks">
+                Browse the attacks
+              </Link>
+            </div>
+          </div>
 
-export default function Home() {
-  return (
-    <div className={styles.page}>
-      <main className={styles.main}>
-        <ThemeImage
-          className={styles.logo}
-          srcLight="turborepo-dark.svg"
-          srcDark="turborepo-light.svg"
-          alt="Turborepo logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol>
-          <li>
-            Get started by editing <code>apps/web/app/page.tsx</code>
-          </li>
-          <li>Save and see your changes instantly.</li>
-        </ol>
-
-        <div className={styles.ctas}>
-          <a
-            className={styles.primary}
-            href="https://vercel.com/new/clone?demo-description=Learn+to+implement+a+monorepo+with+a+two+Next.js+sites+that+has+installed+three+local+packages.&demo-image=%2F%2Fimages.ctfassets.net%2Fe5382hct74si%2F4K8ZISWAzJ8X1504ca0zmC%2F0b21a1c6246add355e55816278ef54bc%2FBasic.png&demo-title=Monorepo+with+Turborepo&demo-url=https%3A%2F%2Fexamples-basic-web.vercel.sh%2F&from=templates&project-name=Monorepo+with+Turborepo&repository-name=monorepo-turborepo&repository-url=https%3A%2F%2Fgithub.com%2Fvercel%2Fturborepo%2Ftree%2Fmain%2Fexamples%2Fbasic&root-directory=apps%2Fdocs&skippable-integrations=1&teamSlug=vercel&utm_source=create-turbo"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className={styles.logo}
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            href="https://turborepo.dev/docs?utm_source"
-            target="_blank"
-            rel="noopener noreferrer"
-            className={styles.secondary}
-          >
-            Read our docs
-          </a>
+          <ChildExplainer />
         </div>
-        <Button appName="web" className={styles.secondary}>
-          Open alert
-        </Button>
-      </main>
-      <footer className={styles.footer}>
-        <a
-          href="https://vercel.com/templates?search=turborepo&utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          href="https://turborepo.dev?utm_source=create-turbo"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to turborepo.dev →
-        </a>
-      </footer>
+      </section>
+
+      <section className="band section">
+        <div className="wrap">
+          <div className="eyebrow">How it works</div>
+          <h2>Six steps, one loop, repeated per bug.</h2>
+          <div className="grid three" style={{ marginTop: 32 }}>
+            {STEPS.map(([title, body], i) => (
+              <div className="card data" key={title}>
+                <div className="mono" style={{ color: "var(--brass)", fontSize: 13 }}>
+                  {String(i + 1).padStart(2, "0")}
+                </div>
+                <h3 style={{ marginTop: 8 }}>{title}</h3>
+                <p style={{ marginTop: 8, marginBottom: 0 }}>{body}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section className="section">
+        <div className="wrap grid two" style={{ alignItems: "start" }}>
+          <div>
+            <div className="eyebrow">What is real, what is simulated</div>
+            <h2>The AI never decides truth.</h2>
+            <p style={{ marginTop: 16 }}>
+              Pass and fail come only from deterministic invariant checks over PayPal&apos;s own order and capture records and the store&apos;s state probe. The
+              model may choose attacks, explain failures and write patches — it can never mark a check passed or cite an ID that is not in the trace.
+            </p>
+            <p>Every purchase, capture and webhook signature is real PayPal sandbox traffic. Forged events and injected faults are labelled as such, everywhere.</p>
+          </div>
+          <div className="card asym">
+            <h3>Built on</h3>
+            <ul style={{ listStyle: "none", padding: 0, margin: "16px 0 0", display: "grid", gap: 10, fontSize: 14 }}>
+              {[
+                ["PayPal Orders v2", "real sandbox purchases, captures, GET-order truth reads"],
+                ["PayPal webhooks", "real signed deliveries, verify-webhook-signature, negative testing, PayPal-Request-Id"],
+                ["Gemma 4 31B", "recon, planning, diagnosis and patches on Ollama Cloud"],
+                ["Deterministic core", "invariants I1–I7 as pure functions — the judge"],
+              ].map(([k, v]) => (
+                <li key={k} style={{ display: "flex", gap: 10 }}>
+                  <span className="ember" aria-hidden>
+                    ▸
+                  </span>
+                  <span>
+                    <b style={{ fontFamily: "var(--font-display)" }}>{k}</b> — <span className="muted">{v}</span>
+                  </span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </div>
+      </section>
+    </main>
+  );
+}
+
+function ChildExplainer() {
+  return (
+    <div className="card ivory asym" style={{ maxWidth: 820 }}>
+      <p style={{ margin: 0, color: "var(--steel)", fontSize: 15 }}>
+        <b style={{ fontFamily: "var(--font-display)", color: "var(--graphite)" }}>In plain words.</b> A little shop gives a sticker when a friend pays.
+        Sometimes the &ldquo;they paid!&rdquo; message arrives twice and the shop hands out two stickers. FaultLine is a friendly robot shopper that plays those tricky
+        games — paying twice over, saying a toy costs a penny — to see if the shop gets confused, then shows exactly what went wrong and checks the fix. Only
+        pretend money.
+      </p>
     </div>
   );
 }

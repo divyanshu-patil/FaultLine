@@ -76,7 +76,8 @@ async def me(request: Request, session: Session = Depends(require_session)):
 
 
 @router.get("/api/attacks")
-async def attacks(_session: Session = Depends(require_session)):
+async def attacks():
+    # Reference data (no user data); public so the catalog is browsable without a code.
     return [{**a, "invariantText": [cat.INVARIANT_TEXT[i] for i in a["invariants"]]} for a in cat.ATTACKS]
 
 
