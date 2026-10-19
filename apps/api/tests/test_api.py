@@ -122,6 +122,24 @@ async def test_csrf_required_on_writes(client):
     assert no_csrf.status_code == 403
 
 
+async def test_csrf_origin_behind_rewrite(client):
+    # Behind the web app's /api rewrite, Host is the API's own but Origin is the public host,
+    # forwarded as x-forwarded-host: that must be accepted. A true cross-origin Origin is refused.
+    await _login(client)
+    proxied = await client.post(
+        "/api/runs",
+        json={"targetId": "buggybeans:demo", "mode": "checklist"},
+        headers={"x-fl-csrf": "1", "origin": "http://app.test", "x-forwarded-host": "app.test"},
+    )
+    assert proxied.status_code == 202, proxied.text
+    cross = await client.post(
+        "/api/runs",
+        json={"targetId": "buggybeans:demo", "mode": "checklist"},
+        headers={"x-fl-csrf": "1", "origin": "http://evil.test"},
+    )
+    assert cross.status_code == 403 and cross.json()["error"]["message"] == "Cross-origin request refused"
+
+
 async def test_attacks_catalog(client):
     await _login(client)
     attacks = (await client.get("/api/attacks")).json()

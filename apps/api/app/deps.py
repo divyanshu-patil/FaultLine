@@ -41,13 +41,21 @@ async def require_session(request: Request) -> Session:
 
 
 def check_csrf(request: Request) -> None:
-    """State-changing routes require the custom header the web client sets, plus a same-origin Origin (docs/12 §6)."""
+    """State-changing routes require the custom header the web client sets, plus a same-origin Origin (docs/12 §6).
+
+    The custom x-fl-csrf header is the real protection (a browser can't set it cross-origin
+    without a CORS preflight the API never grants); the Origin match is defence in depth.
+    Behind the web app's same-origin /api rewrite the upstream Host is the API's own
+    (api:4000) while the browser's Origin is the public host, which Next forwards as
+    x-forwarded-host — so accept an Origin matching either.
+    """
     if request.headers.get("x-fl-csrf") != "1":
         raise AppError("FORBIDDEN", "Missing CSRF header")
     origin = request.headers.get("origin")
     if origin:
-        host = request.headers.get("host")
-        if host and origin.split("://", 1)[-1] != host:
+        origin_host = origin.split("://", 1)[-1]
+        allowed = {h for h in (request.headers.get("x-forwarded-host"), request.headers.get("host")) if h}
+        if allowed and origin_host not in allowed:
             raise AppError("FORBIDDEN", "Cross-origin request refused")
 
 
