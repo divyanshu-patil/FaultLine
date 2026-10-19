@@ -12,6 +12,6 @@
     "verbatimModuleSyntax": true,
     "noUnusedLocals": true
   },
-  "include": ["packages/*/src", "packages/*/test", "apps/api", "apps/proxy", "apps/worker", "apps/buggybeans", "scripts", "vitest.config.ts"],
+  "include": ["packages/*/src", "packages/*/test", "apps/api", "apps/proxy", "apps/worker", "apps/buggybeans", "apps/cli/src", "scripts", "vitest.config.ts"],
   "exclude": ["**/node_modules", "apps/web"]
 }

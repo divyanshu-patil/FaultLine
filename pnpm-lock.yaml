@@ -82,6 +82,25 @@ importers:
         specifier: 5.0.6
         version: 5.0.6
 
+  apps/cli:
+    dependencies:
+      '@faultline/core':
+        specifier: workspace:*
+        version: link:../../packages/core
+      '@faultline/engine':
+        specifier: workspace:*
+        version: link:../../packages/engine
+      '@faultline/schemas':
+        specifier: workspace:*
+        version: link:../../packages/schemas
+    devDependencies:
+      '@faultline/typescript-config':
+        specifier: workspace:*
+        version: link:../../packages/typescript-config
+      '@types/node':
+        specifier: 26.4.1
+        version: 26.4.1
+
   apps/proxy:
     dependencies:
       '@faultline/paypal':

@@ -1,0 +1,21 @@
+{
+  "name": "faultline",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "bin": {
+    "faultline": "src/index.ts"
+  },
+  "scripts": {
+    "faultline": "node --disable-warning=ExperimentalWarning src/index.ts"
+  },
+  "dependencies": {
+    "@faultline/core": "workspace:*",
+    "@faultline/engine": "workspace:*",
+    "@faultline/schemas": "workspace:*"
+  },
+  "devDependencies": {
+    "@faultline/typescript-config": "workspace:*",
+    "@types/node": "26.4.1"
+  }
+}
