@@ -80,17 +80,24 @@ That's it — no real PayPal credentials are needed for the simulated backend. F
 
 ## 4. Run it — CLI
 
-```bash
-git clone <this repo> && cd FaultLine
-pnpm install                       # Node 24+ (native TS, no build step)
+Once published, the CLI needs no checkout — just Node 20+:
 
-# from the repo root:
-pnpm --filter faultline faultline -- test \
-  --store http://127.0.0.1:4600 \
+```bash
+npx faultline test \
+  --store https://your-store.example \
   --probe-token "$PROBE_TOKEN" \
   --paypal-port 4500 --proxy-port 4510 \
   --attacks A1,A2,A5,A6,A7,A8
 ```
+
+From the repo (before it's published, or to hack on it):
+
+```bash
+git clone <this repo> && cd FaultLine && pnpm install   # Node 24+
+pnpm --filter faultline faultline -- test --store http://127.0.0.1:4600 --probe-token "$PROBE_TOKEN" --paypal-port 4500 --proxy-port 4510
+```
+
+> **Let an agent wire up the contract for you:** paste the prompt in **[docs/22 — Agent integration prompt](22-agent-integration-prompt.md)** to Claude Code / Cursor with your store's repo open.
 
 FaultLine prints the simulated-PayPal URL to point your store at, runs each attack, and prints a table:
 

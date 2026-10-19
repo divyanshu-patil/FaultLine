@@ -90,8 +90,9 @@ Tests: `pnpm test` (TypeScript packages) and `pnpm test:api` (FastAPI).
 Point FaultLine at **your own** sandbox checkout, not just BuggyBeans. Your store implements a small contract — create/capture/fulfil endpoints, a `/webhooks/paypal` receiver, and a read-only state probe — and is configured to call FaultLine's simulated PayPal. Then crash-test it from the CLI:
 
 ```bash
-pnpm --filter faultline faultline -- test \
+npx faultline test \
   --store https://your-store.example --probe-token "$PROBE_TOKEN" \
+  --paypal-port 4500 --proxy-port 4510 \
   --attacks A1,A2,A5,A6,A7,A8        # --json for CI, --fail-on-findings to gate
 ```
 
@@ -101,7 +102,7 @@ A5      BUG — failed I3  (Price tampering)
 ...
 ```
 
-It's the self-host path — you run FaultLine next to your store, so nothing leaves your machine. The web app's **Integrate** page walks the same steps in `selfhost` mode. Full contract, endpoint shapes and setup: **[docs/21 — Integrate your store](docs/21-integrate-your-store.md)**. A3/A4 need the operator hooks; everything else runs on the simulated backend.
+It's the self-host path — you run FaultLine next to your store, so nothing leaves your machine, and no live buyer approval is needed. Hand the contract to your own coding agent with the prompt in **[docs/22](docs/22-agent-integration-prompt.md)**, or follow the full contract, endpoint shapes and setup in **[docs/21 — Integrate your store](docs/21-integrate-your-store.md)**. The web app's **Integrate** page walks the same steps. A3/A4 need the operator hooks; everything else runs on the simulated backend.
 
 ## Safety
 

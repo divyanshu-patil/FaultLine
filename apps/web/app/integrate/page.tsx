@@ -14,7 +14,7 @@ const CONFIG: [string, string][] = [
   ["PROBE_TOKEN", "a random ≥16-char token — the same value you pass to FaultLine"],
 ];
 
-const CLI = `pnpm --filter faultline faultline -- test \\
+const CLI = `npx faultline test \\
   --store https://your-store.example \\
   --probe-token "$PROBE_TOKEN" \\
   --paypal-port 4500 --proxy-port 4510 \\
@@ -53,6 +53,15 @@ export default function IntegratePage() {
               <p style={{ marginTop: 6, marginBottom: 0, fontSize: 14 }}>{body}</p>
             </div>
           ))}
+        </div>
+
+        <div className="card asym" style={{ marginTop: 24, background: "var(--ember-wash)", borderLeft: "3px solid var(--ember)" }}>
+          <b style={{ fontFamily: "var(--font-display)" }}>Let your agent do step 1.</b>{" "}
+          <span style={{ fontSize: 15 }}>
+            Paste the prompt in{" "}
+            <a className="link" href="https://github.com/divyanshu-patil/FaultLine/blob/main/docs/22-agent-integration-prompt.md">docs/22</a>{" "}
+            to Claude Code or Cursor with your store&apos;s repo open, and it implements the contract below in your stack.
+          </span>
         </div>
 
         <h2 style={{ marginTop: 44 }}>2 — Configure your store</h2>
