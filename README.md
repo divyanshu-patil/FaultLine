@@ -85,6 +85,24 @@ pnpm eval:bugs                     # 6/6 attacks (A3, A4 need operator hooks)
 
 Tests: `pnpm test` (TypeScript packages) and `pnpm test:api` (FastAPI).
 
+## Integrate your store
+
+Point FaultLine at **your own** sandbox checkout, not just BuggyBeans. Your store implements a small contract — create/capture/fulfil endpoints, a `/webhooks/paypal` receiver, and a read-only state probe — and is configured to call FaultLine's simulated PayPal. Then crash-test it from the CLI:
+
+```bash
+pnpm --filter faultline faultline -- test \
+  --store https://your-store.example --probe-token "$PROBE_TOKEN" \
+  --attacks A1,A2,A5,A6,A7,A8        # --json for CI, --fail-on-findings to gate
+```
+
+```
+ATTACK  RESULT
+A5      BUG — failed I3  (Price tampering)
+...
+```
+
+It's the self-host path — you run FaultLine next to your store, so nothing leaves your machine. The web app's **Integrate** page walks the same steps in `selfhost` mode. Full contract, endpoint shapes and setup: **[docs/21 — Integrate your store](docs/21-integrate-your-store.md)**. A3/A4 need the operator hooks; everything else runs on the simulated backend.
+
 ## Safety
 
 FaultLine is **sandbox only** and enforces it: the sole PayPal host it will reach is `api-m.sandbox.paypal.com`, checked at boot and in CI. It attacks only the bundled victim store (hosted mode), never applies patches to your real repository, and runs AI-written patches only in throwaway instances behind a guard (allowlisted files, no shell, no new hosts). The two behaviours that forge a signature (A3) or withhold a live capture response (A4) are operator-supplied hooks, run against your own sandbox account — they default to a safe no-op so those attacks are *skipped*, never faked.
