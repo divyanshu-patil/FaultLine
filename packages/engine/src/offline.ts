@@ -1,16 +1,18 @@
 import { copyFileSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
-import type { AddressInfo } from "node:net";
 import { dirname, join } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { createApp, CATALOG } from "buggybeans/src/app.ts";
 import { openDb } from "buggybeans/src/db.ts";
 import { parseFlags } from "buggybeans/src/env.ts";
 import { createPayPal } from "buggybeans/src/paypal.ts";
-import { createProxy, type WebhookRule } from "proxy/src/app.ts";
-import { checkInvariants, getAttack, type AttackFacts, type TruthOrder } from "@faultline/core";
+import { createProxy } from "proxy/src/app.ts";
+import { checkInvariants, getAttack } from "@faultline/core";
 import { parseBugList, renderVariant } from "@faultline/patch";
-import type { AttackId, CatalogItem, Verdict } from "@faultline/schemas";
+import type { AttackId, Verdict } from "@faultline/schemas";
 import { createFakePayPal, type FakePayPal } from "@faultline/testing";
+import { buildFacts, listen, ruleFor } from "./shared.ts";
+
+export { buildFacts, listen, ruleFor, type StoreProbe } from "./shared.ts";
 
 /** The BuggyBeans store modules the attack runner needs: the static set runs the seeded store;
  *  a dynamically-imported set (from a patched source tree) runs the AI's fix under the same checks. */
@@ -25,18 +27,7 @@ const STATIC_MOD: StoreMod = { createApp, CATALOG, openDb, parseFlags, createPay
 
 const HOST = "https://api-m.sandbox.paypal.com";
 const PROBE = "0123456789abcdef-probe";
-const CATALOG_ITEM: CatalogItem = { sku: "house-blend", name: "House Blend 250 g", price: "12.00", currency: "USD", creditsPerItem: 100 };
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
-
-type Server = { port: number; close: () => void };
-
-export function listen(app: { listen: (...args: never[]) => { address: () => AddressInfo | string | null; close: () => void } }, port = 0, host = "127.0.0.1"): Promise<Server> {
-  return new Promise((resolve) => {
-    const s = (app.listen as (port: number, host: string, cb: () => void) => { address: () => AddressInfo | string | null; close: () => void })(port, host, () =>
-      resolve({ port: (s.address() as AddressInfo).port, close: () => s.close() }),
-    );
-  });
-}
 
 /** Offline attacks that need neither a forged signature (A3) nor a withheld capture response (A4). */
 export const OFFLINE_ATTACKS: AttackId[] = ["A1", "A2", "A5", "A6", "A7", "A8"];
@@ -142,13 +133,6 @@ async function importStore(srcDir: string): Promise<StoreMod> {
   return { createApp: app.createApp, CATALOG: app.CATALOG, openDb: dbm.openDb, parseFlags: env.parseFlags, createPayPal: pp.createPayPal };
 }
 
-export function ruleFor(attackId: AttackId): WebhookRule {
-  if (attackId === "A1") return { kind: "duplicate", times: 3, gapMs: 15 };
-  if (attackId === "A2") return { kind: "hold_until", hold: "CHECKOUT.ORDER.APPROVED", until: "PAYMENT.CAPTURE.COMPLETED" };
-  if (attackId === "A8") return { kind: "drop" };
-  return { kind: "passthrough" };
-}
-
 async function createOrder(base: string, amount?: string): Promise<string> {
   const res = await fetch(`${base}/api/orders`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ sku: "house-blend", qty: 1, ...(amount ? { amount } : {}) }) });
   return (await res.json()).id as string;
@@ -177,25 +161,3 @@ async function drive(attackId: AttackId, base: string, fake: FakePayPal, proxy: 
   return orderId;
 }
 
-export type StoreProbe = { orders: unknown[]; entitlements: unknown[]; webhookEvents: unknown[]; storeTime?: string };
-
-export function buildFacts(orderId: string, fake: FakePayPal, probe: StoreProbe, buyer: { captureAttempted: boolean; sawError: boolean }, item: CatalogItem = CATALOG_ITEM): AttackFacts {
-  const order = fake.orders.get(orderId)!;
-  const truth: TruthOrder = {
-    id: orderId,
-    status: order.status,
-    amount: item.price,
-    currency: item.currency,
-    captures: order.captures.map((c) => ({ id: c.id, status: c.status, amount: c.amount.value, currency: c.amount.currency_code })),
-    evidenceId: "tr-0001",
-  };
-  return {
-    orderIds: [orderId],
-    truth: { [orderId]: truth },
-    after: { storeTime: probe.storeTime ?? new Date().toISOString(), orders: probe.orders as never, entitlements: probe.entitlements as never, webhookEvents: probe.webhookEvents as never },
-    afterId: "st-0002",
-    buyer: { captureAttempted: buyer.captureAttempted, sawError: buyer.sawError, evidenceId: "br-0003" },
-    catalog: [item],
-    evidence: { webhooks: ["wf-0004"], captures: ["pc-0005"], creates: ["pc-0006"] },
-  };
-}

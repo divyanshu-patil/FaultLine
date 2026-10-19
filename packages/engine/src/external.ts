@@ -2,7 +2,7 @@ import { createProxy } from "proxy/src/app.ts";
 import { checkInvariants, getAttack } from "@faultline/core";
 import type { AttackId, CatalogItem, Verdict } from "@faultline/schemas";
 import { startFakePayPalServer, type FakePayPalServer } from "@faultline/testing";
-import { buildFacts, listen, ruleFor, type StoreProbe } from "./offline.ts";
+import { buildFacts, listen, ruleFor, type StoreProbe } from "./shared.ts";
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 

@@ -1,3 +1,6 @@
 packages:
   - "apps/*"
   - "packages/*"
+allowBuilds:
+  # esbuild runs via its JS API (apps/cli/build.mjs) + platform package; its postinstall is not needed.
+  esbuild: false

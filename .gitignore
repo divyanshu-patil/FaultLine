@@ -51,3 +51,6 @@ eval/results/*.json
 # Next.js auto-generated agent rule files
 apps/web/AGENTS.md
 apps/web/CLAUDE.md
+
+# CLI build output (produced by prepublishOnly)
+apps/cli/dist/

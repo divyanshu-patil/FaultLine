@@ -1,7 +1,7 @@
-#!/usr/bin/env -S node --disable-warning=ExperimentalWarning
 // FaultLine CLI: crash-test an external store that implements the integration contract (docs/21).
+// Built to a standalone bundle for `npx` (see package.json "build"); run from source in dev.
 import { getAttack } from "@faultline/core";
-import { createExternalHarness, EXTERNAL_ATTACKS } from "@faultline/engine";
+import { createExternalHarness, EXTERNAL_ATTACKS } from "@faultline/engine/external";
 import type { AttackId, CatalogItem } from "@faultline/schemas";
 
 function parseArgs(argv: string[]): Record<string, string | boolean> {

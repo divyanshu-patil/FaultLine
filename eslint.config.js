@@ -9,5 +9,5 @@ export default [
   { rules: { "no-useless-assignment": "off" } },
   // apps/web (Next.js/JSX) is gated by tsc (pnpm --filter web check-types) + next build, not eslint;
   // apps/api is Python (ruff/pytest). Neither is linted here.
-  { ignores: ["apps/web/**", "apps/api/**", "docs/**", "scripts/*.mjs", "**/.venv/**"] },
+  { ignores: ["apps/web/**", "apps/api/**", "docs/**", "scripts/*.mjs", "**/.venv/**", "**/dist/**"] },
 ];

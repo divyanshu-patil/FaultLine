@@ -3,7 +3,10 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "exports": { ".": "./src/index.ts" },
+  "exports": {
+    ".": "./src/index.ts",
+    "./external": "./src/external.ts"
+  },
   "dependencies": {
     "@faultline/core": "workspace:*",
     "@faultline/schemas": "workspace:*",

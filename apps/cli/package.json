@@ -1,21 +1,32 @@
 {
   "name": "faultline",
   "version": "0.1.0",
-  "private": true,
+  "description": "Crash-test a PayPal checkout integration — duplicate/out-of-order/dropped webhooks, a tampered price, a declined payment — with deterministic pass/fail. Sandbox only.",
+  "keywords": ["paypal", "sandbox", "webhooks", "testing", "checkout", "crash-test", "cli"],
+  "license": "MIT",
   "type": "module",
   "bin": {
-    "faultline": "src/index.ts"
+    "faultline": "dist/faultline.cjs"
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "engines": {
+    "node": ">=20"
   },
   "scripts": {
-    "faultline": "node --disable-warning=ExperimentalWarning src/index.ts"
+    "faultline": "node --disable-warning=ExperimentalWarning src/index.ts",
+    "build": "node build.mjs",
+    "prepublishOnly": "pnpm run build"
   },
-  "dependencies": {
+  "dependencies": {},
+  "devDependencies": {
     "@faultline/core": "workspace:*",
     "@faultline/engine": "workspace:*",
-    "@faultline/schemas": "workspace:*"
-  },
-  "devDependencies": {
+    "@faultline/schemas": "workspace:*",
     "@faultline/typescript-config": "workspace:*",
-    "@types/node": "26.4.1"
+    "@types/node": "26.4.1",
+    "esbuild": "0.28.2"
   }
 }
