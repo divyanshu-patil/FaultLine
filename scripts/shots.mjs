@@ -17,8 +17,27 @@ await page.fill('input[type="password"]', "demo");
 await Promise.all([page.waitForURL(/\/runs\/new/), page.click("button.btn.ember")]);
 
 const pinned = await (await fetch(`${WEB}/api/reports/pinned`)).json();
-const runId = process.env.RUN_ID || await page.evaluate(async () => (await (await fetch("/api/runs?limit=1")).json())[0]?.id);
-const findingId = process.env.FINDING_ID || (runId ? await page.evaluate(async (id) => (await (await fetch(`/api/runs/`)).json()).findings?.[0]?.id, runId) : null);
+
+// Create a real agent run in this browser session (so run/finding shots are from a live run,
+// not the pinned demo) and wait for it to finish. Overridable with RUN_ID/FINDING_ID.
+async function captureRealRun() {
+  const created = await page.evaluate(async () => {
+    const r = await fetch("/api/runs", { method: "POST", headers: { "Content-Type": "application/json", "x-fl-csrf": "1" }, body: JSON.stringify({ targetId: "buggybeans:demo", mode: "agent" }) });
+    return r.status === 202 ? await r.json() : { error: `${r.status} ${await r.text()}` };
+  });
+  if (created.error) throw new Error(`create run failed: ${created.error}`);
+  for (let i = 0; i < 90; i++) {
+    const run = await page.evaluate(async (id) => await (await fetch(`/api/runs/${id}`)).json(), created.runId);
+    if (["completed", "failed", "cancelled"].includes(run.status)) return { runId: created.runId, findingId: run.findings?.[0]?.id ?? null };
+    await page.waitForTimeout(2000);
+  }
+  return { runId: created.runId, findingId: null };
+}
+
+const { runId, findingId } = process.env.RUN_ID
+  ? { runId: process.env.RUN_ID, findingId: process.env.FINDING_ID ?? null }
+  : await captureRealRun();
+console.log(`run ${runId} finding ${findingId}`);
 
 const shots = [
   ["home", `${WEB}/`, 2600],
