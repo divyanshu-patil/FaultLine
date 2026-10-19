@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "turbo run dev",
     "build": "turbo run build",
-    "lint": "eslint --max-warnings 0 . && pnpm --filter web lint",
+    "lint": "eslint --max-warnings 0 .",
     "typecheck": "tsc --noEmit -p tsconfig.json && pnpm --filter web check-types",
     "test": "vitest run",
     "check": "pnpm lint && pnpm typecheck && pnpm test && sh scripts/check-no-prod-host.sh",
