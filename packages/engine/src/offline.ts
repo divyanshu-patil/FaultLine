@@ -30,9 +30,9 @@ const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
 type Server = { port: number; close: () => void };
 
-function listen(app: { listen: (...args: never[]) => { address: () => AddressInfo | string | null; close: () => void } }): Promise<Server> {
+export function listen(app: { listen: (...args: never[]) => { address: () => AddressInfo | string | null; close: () => void } }, port = 0, host = "127.0.0.1"): Promise<Server> {
   return new Promise((resolve) => {
-    const s = (app.listen as (port: number, host: string, cb: () => void) => { address: () => AddressInfo | string | null; close: () => void })(0, "127.0.0.1", () =>
+    const s = (app.listen as (port: number, host: string, cb: () => void) => { address: () => AddressInfo | string | null; close: () => void })(port, host, () =>
       resolve({ port: (s.address() as AddressInfo).port, close: () => s.close() }),
     );
   });
@@ -142,7 +142,7 @@ async function importStore(srcDir: string): Promise<StoreMod> {
   return { createApp: app.createApp, CATALOG: app.CATALOG, openDb: dbm.openDb, parseFlags: env.parseFlags, createPayPal: pp.createPayPal };
 }
 
-function ruleFor(attackId: AttackId): WebhookRule {
+export function ruleFor(attackId: AttackId): WebhookRule {
   if (attackId === "A1") return { kind: "duplicate", times: 3, gapMs: 15 };
   if (attackId === "A2") return { kind: "hold_until", hold: "CHECKOUT.ORDER.APPROVED", until: "PAYMENT.CAPTURE.COMPLETED" };
   if (attackId === "A8") return { kind: "drop" };
@@ -177,13 +177,15 @@ async function drive(attackId: AttackId, base: string, fake: FakePayPal, proxy: 
   return orderId;
 }
 
-function buildFacts(orderId: string, fake: FakePayPal, probe: { orders: unknown[]; entitlements: unknown[]; webhookEvents: unknown[]; storeTime?: string }, buyer: { captureAttempted: boolean; sawError: boolean }): AttackFacts {
+export type StoreProbe = { orders: unknown[]; entitlements: unknown[]; webhookEvents: unknown[]; storeTime?: string };
+
+export function buildFacts(orderId: string, fake: FakePayPal, probe: StoreProbe, buyer: { captureAttempted: boolean; sawError: boolean }, item: CatalogItem = CATALOG_ITEM): AttackFacts {
   const order = fake.orders.get(orderId)!;
   const truth: TruthOrder = {
     id: orderId,
     status: order.status,
-    amount: "12.00",
-    currency: "USD",
+    amount: item.price,
+    currency: item.currency,
     captures: order.captures.map((c) => ({ id: c.id, status: c.status, amount: c.amount.value, currency: c.amount.currency_code })),
     evidenceId: "tr-0001",
   };
@@ -193,7 +195,7 @@ function buildFacts(orderId: string, fake: FakePayPal, probe: { orders: unknown[
     after: { storeTime: probe.storeTime ?? new Date().toISOString(), orders: probe.orders as never, entitlements: probe.entitlements as never, webhookEvents: probe.webhookEvents as never },
     afterId: "st-0002",
     buyer: { captureAttempted: buyer.captureAttempted, sawError: buyer.sawError, evidenceId: "br-0003" },
-    catalog: [CATALOG_ITEM],
+    catalog: [item],
     evidence: { webhooks: ["wf-0004"], captures: ["pc-0005"], creates: ["pc-0006"] },
   };
 }

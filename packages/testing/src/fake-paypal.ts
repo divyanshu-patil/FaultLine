@@ -30,6 +30,7 @@ export function createFakePayPal(opts: FakePayPalOptions = {}) {
   const secret = randomBytes(16);
   const orders = new Map<string, Order>();
   const idem = new Map<string, { status: number; body: unknown }>();
+  const declineOnce = new Set<string>(); // order ids whose next capture should decline (A7, external stores)
   const emitted: { eventType: string; orderId: string; status: number | null }[] = [];
   let webhookUrl: string | null = null;
   let tokens = 0;
@@ -122,6 +123,8 @@ export function createFakePayPal(opts: FakePayPalOptions = {}) {
     if (o && method === "POST" && m![2] === "/capture") {
       const mock = headers.get("paypal-mock-response");
       if (mock) return issue(422, JSON.parse(mock).mock_application_codes);
+      // A7 for an external store, which can't set the mock header itself: FaultLine arms a one-shot decline.
+      if (declineOnce.delete(o.id)) return issue(422, "INSTRUMENT_DECLINED");
       const requestId = headers.get("paypal-request-id");
       const key = requestId ? `${path}|${requestId}` : null;
       if (key && idem.has(key)) {
@@ -158,6 +161,7 @@ export function createFakePayPal(opts: FakePayPalOptions = {}) {
   return {
     fetch: fakeFetch,
     approve,
+    declineCapture: (orderId: string) => declineOnce.add(orderId),
     webhookId,
     orders,
     emitted,

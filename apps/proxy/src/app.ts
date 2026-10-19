@@ -2,7 +2,9 @@ import express, { type Express, type Request as Req, type Response as Res } from
 import { SANDBOX_API_HOST, orderIdOfEvent } from "@faultline/paypal";
 import { faultPassthrough, forgeNotProvided, type ForgeEvent, type InjectCaptureFault } from "./stubs.ts";
 
-export type Instance = { instanceId: string; port: number; runId: string; attackRowId: string | null };
+// `webhookUrl` targets an external store directly (self-host integration); otherwise deliveries go to the
+// in-process instance at 127.0.0.1:<port>/webhooks/paypal.
+export type Instance = { instanceId: string; port: number; runId: string; attackRowId: string | null; webhookUrl?: string };
 
 /** How the store's own real, signed deliveries are disturbed on the way to it. None of these fabricate a signature. */
 export type WebhookRule =
@@ -67,8 +69,9 @@ export function createProxy(deps: ProxyDeps = {}) {
 
   async function forwardToStore(reg: RunReg, headers: Record<string, string>, raw: Buffer, outcome: SavedDelivery["outcome"], forged = false) {
     const fwd = Object.fromEntries(Object.entries(headers).filter(([k]) => !PAYPAL_HOP.has(k.toLowerCase())));
+    const target = reg.instance.webhookUrl ?? `http://127.0.0.1:${reg.instance.port}/webhooks/paypal`;
     try {
-      const res = await upstream(`http://127.0.0.1:${reg.instance.port}/webhooks/paypal`, { method: "POST", headers: fwd, body: raw as BodyInit });
+      const res = await upstream(target, { method: "POST", headers: fwd, body: raw as BodyInit });
       log.info({ msg: "forwarded webhook", instance: reg.instance.instanceId, status: res.status, outcome });
     } catch (e) {
       log.warn({ msg: "forward failed", instance: reg.instance.instanceId, error: String(e) });
