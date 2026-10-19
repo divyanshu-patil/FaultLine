@@ -192,15 +192,17 @@ Consistency rule used by F13: a diagnosis is accepted only if its category is in
 
 ## 5. Expected results matrix (acceptance baseline)
 
-| Attack | `BUGS=none` | Its own bug only | Demo preset |
+| Attack | `BUGS=none` | Its own bug only | Demo preset (B1, B3, B4, B5, B7) |
 | --- | --- | --- | --- |
 | A1 | all pass | I2 fail | I2 fail |
 | A2 | all pass | I4 fail | pass (B2 off) |
-| A3 | all pass | I5 fail | I5 fail |
+| A3 | all pass | I4, I5 fail | I4, I5 fail |
 | A4 | all pass | I4, I6 fail | I4, I6 fail |
 | A5 | all pass | I3 fail | I3 fail |
-| A6 | all pass | I5 fail | pass (B6 off) |
-| A7 | all pass | I7 fail | I7 fail |
-| A8 | all pass | I6 fail | pass (B8 off) |
+| A6 | all pass | I4, I5 fail | pass (B6 off) |
+| A7 | all pass | I5, I7 fail | I7 fail |
+| A8 | all pass | I6 fail | I6 fail |
 
-This matrix is executed by `pnpm eval:bugs` and is acceptance criterion AC-41.
+Two interactions are worth noting. **A7 demo** fails I7 only (not I5): the demo also carries B1, which grants credits from the webhook, and a declined capture emits no COMPLETED webhook, so no credits are granted — status is wrong but there are none to flag under I5. **A8 demo** fails I6 although B8 is off: B1 grants only from the webhook too, so withholding every webhook still leaves a captured order with no credits.
+
+This matrix is the authoritative `EXPECTED_MATRIX` in `packages/core/src/attacks.ts`. Its `own` column is verified end-to-end by the `@faultline/engine` tests and `pnpm eval:bugs` (A3 and A4 need the operator forge/fault hooks and are skipped there); the `demo` column is checked by the worker integration test. Acceptance criterion AC-41.

@@ -4,9 +4,9 @@ BuggyBeans is a deliberately small coffee shop that sells bags of coffee and gra
 
 ## 1. Requirements
 
-- Express 5 server, server-rendered HTML (or static HTML + `checkout.js`), SQLite via `better-sqlite3`.
+- Express 5 server, server-rendered HTML plus a static `checkout.js`, SQLite via Node's built-in `node:sqlite` (`DatabaseSync`) — no native module to build.
 - Uses PayPal JS SDK buttons and its own tiny REST client (does **not** import `@faultline/paypal`).
-- Every bug is a small, readable code path switched by the `BUGS` env (parsed in `src/bugs.ts`). In **fixed** form each code path is what we would recommend in production.
+- Every bug is a small, readable code path switched by the `BUGS` env (parsed in `src/env.ts` as `flags`). In **fixed** form each code path is what we would recommend in production.
 - The source must stay readable for the model: no clever abstractions; each route file < 200 lines.
 - Has a state probe and catalog endpoint protected by `PROBE_TOKEN` (`docs/09` §3).
 - Starts in < 2 s; listens on `127.0.0.1:$PORT`; builds absolute URLs from `PUBLIC_URL`.
@@ -60,7 +60,7 @@ The `UNIQUE` constraints are created conditionally by `db.ts` based on `BUGS`, w
 ## 6. Code style rules for bug paths
 
 - Each bug path is an `if (bugs.B1) { … } else { … }` block or a conditionally registered route, with **no comment naming the bug** (the model must find it from behaviour and code, not labels). Bug documentation lives here, not in the source.
-- The `bugs` object is read once at boot from `BUGS`; the source never contains the preset names.
+- The `flags` object is read once at boot from `BUGS`; the source never contains the preset names.
 - The model receives the **source of the running configuration**: before recon, the instance manager renders the source with dead branches removed (`scripts/render-variant.ts` uses a tiny AST transform on `if (bugs.Bx)` blocks), so the model sees what a real buggy store would look like and cannot read the fixed branch. The same rendered source is what the patch applies to.
 
 ## 7. Variants
