@@ -1,4 +1,32 @@
+import Link from "next/link";
+
 export const metadata = { title: "Integrate your store — FaultLine" };
+
+const PROBE_SHAPE = `GET /__crashtest/state      Authorization: Bearer <PROBE_TOKEN>
+
+{
+  "storeTime": "2026-10-19T12:00:00.000Z",
+  "orders": [
+    { "storeOrderId": "o_ab12", "paypalOrderId": "5LU...", "sku": "house-blend",
+      "qty": 1, "status": "paid", "captureId": "3EM...", "amount": "12.00",
+      "currency": "USD", "updatedAt": "..." }
+  ],
+  "entitlements": [
+    { "storeOrderId": "o_ab12", "credits": 100, "source": "webhook",
+      "grantedAt": "...", "ref": "3EM..." }
+  ],
+  "webhookEvents": [
+    { "eventId": "WH-...", "type": "PAYMENT.CAPTURE.COMPLETED",
+      "receivedAt": "...", "outcome": "processed" }
+  ]
+}`;
+
+const SECURITY: [string, string][] = [
+  ["Sandbox only", "FaultLine refuses any PayPal host but the sandbox, and the simulated backend never touches the network. Never point it at production."],
+  ["The probe is read-only", "GET /__crashtest/state must never change state and must not return customer PII — model entitlements as counts and ids."],
+  ["Protect the probe token", "Use a fresh random ≥16-char token and treat it as a secret; the probe gates on a constant-time compare."],
+  ["You own the run", "Self-host so your store and its credentials stay with you. Deployed FaultLine keeps external targets disabled to avoid attacking a URL you don't own."],
+];
 
 const ENDPOINTS: [string, string, string][] = [
   ["POST /api/orders", "Create an order", "Body {sku, qty, amount?}. Price from your own catalog and ignore the optional client amount (that's attack A5). Respond {\"id\": \"<paypal order id>\"}."],
@@ -55,12 +83,17 @@ export default function IntegratePage() {
           ))}
         </div>
 
+        <p style={{ marginTop: 20, fontSize: 14 }} className="muted">
+          The state probe is the one FaultLine can&apos;t work without — it&apos;s how the checker reads your truth. Return exactly this shape (<span className="mono">entitlements</span>{" "}
+          is whatever you grant on payment, as a credit count per order):
+        </p>
+        <Code>{PROBE_SHAPE}</Code>
+
         <div className="card asym" style={{ marginTop: 24, background: "var(--ember-wash)", borderLeft: "3px solid var(--ember)" }}>
           <b style={{ fontFamily: "var(--font-display)" }}>Let your agent do step 1.</b>{" "}
           <span style={{ fontSize: 15 }}>
-            Paste the prompt in{" "}
-            <a className="link" href="https://github.com/divyanshu-patil/FaultLine/blob/main/docs/22-agent-integration-prompt.md">docs/22</a>{" "}
-            to Claude Code or Cursor with your store&apos;s repo open, and it implements the contract below in your stack.
+            Open the <Link className="link" href="/integrate/agent-prompt">agent prompt</Link>, copy it, and paste it to Claude Code or Cursor with your
+            store&apos;s repo open — it implements the contract below in your stack.
           </span>
         </div>
 
@@ -76,7 +109,7 @@ export default function IntegratePage() {
         </ul>
 
         <h2 style={{ marginTop: 44 }}>3 — Run the crash test</h2>
-        <p style={{ marginTop: 12 }}>Clone FaultLine, <span className="mono">pnpm install</span>, then from the repo root:</p>
+        <p style={{ marginTop: 12 }}>With Node 20+, no checkout needed:</p>
         <Code>{CLI}</Code>
         <p style={{ marginTop: 14, fontSize: 14 }} className="muted">
           FaultLine prints the simulated-PayPal URL to point your store at, runs each attack, and prints a table of findings. Add <span className="mono">--json</span>{" "}
@@ -84,12 +117,21 @@ export default function IntegratePage() {
           simulated backend.
         </p>
 
+        <h2 style={{ marginTop: 44 }}>Safety</h2>
+        <div className="grid two" style={{ marginTop: 20 }}>
+          {SECURITY.map(([title, body]) => (
+            <div className="card" key={title}>
+              <h3 style={{ fontSize: 16 }}>{title}</h3>
+              <p style={{ marginTop: 8, marginBottom: 0, fontSize: 14 }}>{body}</p>
+            </div>
+          ))}
+        </div>
+
         <div className="card asym" style={{ marginTop: 40, background: "var(--ivory)" }}>
           <b style={{ fontFamily: "var(--font-display)" }}>Self-host vs hosted.</b>{" "}
           <span style={{ fontSize: 15 }}>
-            This page documents the self-host path — you own the run and your store never leaves your machine. In a deployed (hosted) FaultLine, attacking an
-            arbitrary URL is disabled; run FaultLine yourself to test your own store. The full contract, exact request/response shapes and security notes are in{" "}
-            <a className="link" href="https://github.com/divyanshu-patil/FaultLine/blob/main/docs/21-integrate-your-store.md">docs/21 — Integrate your store</a>.
+            This is the self-host path — you own the run and your store never leaves your machine. In a deployed (hosted) FaultLine, attacking an arbitrary URL is
+            disabled, so run FaultLine yourself to test your own store. Next step: open the <Link className="link" href="/integrate/agent-prompt">agent prompt</Link>.
           </span>
         </div>
       </div>
