@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { SandboxBadge } from "./SandboxBadge";
+import { Tour } from "./Tour";
 
 export function TopBar() {
   return (
@@ -16,7 +17,10 @@ export function TopBar() {
           <Link href="/attacks">Attacks</Link>
           <Link href="/about">About</Link>
         </nav>
-        <SandboxBadge />
+        <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
+          <Tour />
+          <SandboxBadge />
+        </div>
       </div>
     </header>
   );

@@ -107,8 +107,10 @@ export default function RunPage() {
 
         <div style={{ display: "grid", gap: 24, gridTemplateColumns: "minmax(0,1fr)", marginTop: 28 }} className="run-grid">
           <section aria-label="Phase and agent log">
-            <PhaseStepper phase={run.phase} status={run.status} />
-            <div className="card" style={{ marginTop: 16 }}>
+            <div data-tour="phases">
+              <PhaseStepper phase={run.phase} status={run.status} />
+            </div>
+            <div className="card" style={{ marginTop: 16 }} data-tour="agentlog">
               <div className="eyebrow" style={{ marginBottom: 12 }}>Agent log</div>
               {agentLog.length === 0 ? (
                 <p className="muted" style={{ fontSize: 14, margin: 0 }} aria-live="polite">
@@ -136,7 +138,7 @@ export default function RunPage() {
           </section>
 
           <section aria-label="Attack timeline and verdicts">
-            <div className="card data">
+            <div className="card data" data-tour="invariants">
               <div className="eyebrow" style={{ marginBottom: 12 }}>Invariant board</div>
               <InvariantBoard rows={run.attacks.filter((a) => a.purpose === "baseline").map((a) => ({ attackId: a.attackId, verdicts: a.verdicts }))} />
             </div>
@@ -166,7 +168,7 @@ export default function RunPage() {
               </div>
             </div>
 
-            <div style={{ marginTop: 20 }}>
+            <div style={{ marginTop: 20 }} data-tour="findings">
               <div className="eyebrow" style={{ marginBottom: 12 }}>Findings</div>
               {run.findings.length === 0 ? (
                 <p className="muted">{done ? "No failing invariants — the store held up." : "No findings yet."}</p>

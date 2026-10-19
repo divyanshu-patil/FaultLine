@@ -150,3 +150,15 @@ footer.foot .wrap { display: flex; flex-wrap: wrap; gap: 16px 32px; justify-cont
 
 :focus-visible { outline: 2px solid var(--ember); outline-offset: 2px; }
 @media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
+
+/* ---- guided tour (driver.js, themed to Ventriloc) ---- */
+.tour-btn { font-family: var(--font-display); font-size: 12px; letter-spacing: 0.02em; color: var(--steel); border: 1px solid color-mix(in srgb, var(--graphite) 18%, transparent); border-radius: var(--radius-pill); padding: 5px 14px; background: transparent; cursor: pointer; transition: color 120ms ease, border-color 120ms ease; }
+.tour-btn:hover { color: var(--graphite); border-color: var(--graphite); }
+.driver-popover.fl-tour { background: #ffffff; color: var(--graphite); border-radius: var(--radius-card); box-shadow: 0 12px 44px rgba(32, 32, 32, 0.2); max-width: 320px; padding: 20px; }
+.driver-popover.fl-tour .driver-popover-title { font-family: var(--font-display); font-size: 17px; font-weight: 500; color: var(--graphite); }
+.driver-popover.fl-tour .driver-popover-description { font-family: var(--font-body); font-size: 14px; color: var(--steel); line-height: 1.5; }
+.driver-popover.fl-tour .driver-popover-progress-text { font-family: var(--font-body); font-size: 12px; color: var(--brass); }
+.driver-popover.fl-tour .driver-popover-arrow { color: #ffffff; }
+.driver-popover.fl-tour button.driver-popover-next-btn { font-family: var(--font-display); background: var(--ember); color: #fff; border: 1px solid var(--ember); border-radius: 0; text-shadow: none; padding: 7px 15px; }
+.driver-popover.fl-tour button.driver-popover-prev-btn { font-family: var(--font-display); background: transparent; color: var(--steel); border: 1px solid color-mix(in srgb, var(--graphite) 18%, transparent); border-radius: 0; text-shadow: none; padding: 7px 15px; }
+.driver-popover.fl-tour button.driver-popover-close-btn { color: var(--steel); }

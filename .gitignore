@@ -47,3 +47,7 @@ eval/results/*.json
 
 # transient patched-store trees from engine patch verification
 **/.fl-verify-*/
+
+# Next.js auto-generated agent rule files
+apps/web/AGENTS.md
+apps/web/CLAUDE.md

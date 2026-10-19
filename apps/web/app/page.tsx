@@ -26,11 +26,11 @@ export default async function Home() {
               forged event, a capture that times out after the money moved, a tampered price, a declined payment. Then it explains the cause and proves the fix.
             </p>
             <div style={{ display: "flex", flexWrap: "wrap", gap: 12, marginTop: 28 }}>
-              <Link className="btn ember" href="/runs/new?target=buggybeans:demo&mode=agent">
+              <Link className="btn ember" href="/runs/new?target=buggybeans:demo&mode=agent" data-tour="run">
                 Run the demo crash test →
               </Link>
               {pinned?.slug ? (
-                <Link className="btn ghost" href={`/reports/${pinned.slug}`}>
+                <Link className="btn ghost" href={`/reports/${pinned.slug}`} data-tour="report">
                   See a finished report
                 </Link>
               ) : null}
@@ -44,7 +44,7 @@ export default async function Home() {
         </div>
       </section>
 
-      <section className="band section">
+      <section className="band section" data-tour="loop">
         <div className="wrap">
           <div className="eyebrow">How it works</div>
           <h2>Six steps, one loop, repeated per bug.</h2>
@@ -62,7 +62,7 @@ export default async function Home() {
         </div>
       </section>
 
-      <section className="section">
+      <section className="section" data-tour="judge">
         <div className="wrap grid two" style={{ alignItems: "start" }}>
           <div>
             <div className="eyebrow">What is real, what is simulated</div>
