@@ -41,7 +41,8 @@ describe("FakePayPal (contract with docs/07 §8a)", () => {
     expect(truth.status).toBe("COMPLETED");
     expect(truth.captures).toHaveLength(1);
 
-    await new Promise((r) => setTimeout(r, 50));
+    // webhooks are delivered async; poll instead of a fixed sleep so the test is robust under parallel load
+    for (let i = 0; i < 200 && received.length < 2; i++) await new Promise((r) => setTimeout(r, 10));
     expect(received.map((r) => JSON.parse(r.body).event_type)).toEqual(["CHECKOUT.ORDER.APPROVED", "PAYMENT.CAPTURE.COMPLETED"]);
     const d = received[1]!;
     const verify = (sig: string) =>

@@ -1,12 +1,27 @@
+import { copyFileSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import type { AddressInfo } from "node:net";
+import { dirname, join } from "node:path";
+import { fileURLToPath, pathToFileURL } from "node:url";
 import { createApp, CATALOG } from "buggybeans/src/app.ts";
 import { openDb } from "buggybeans/src/db.ts";
 import { parseFlags } from "buggybeans/src/env.ts";
 import { createPayPal } from "buggybeans/src/paypal.ts";
 import { createProxy, type WebhookRule } from "proxy/src/app.ts";
 import { checkInvariants, getAttack, type AttackFacts, type TruthOrder } from "@faultline/core";
+import { parseBugList, renderVariant } from "@faultline/patch";
 import type { AttackId, CatalogItem, Verdict } from "@faultline/schemas";
 import { createFakePayPal, type FakePayPal } from "@faultline/testing";
+
+/** The BuggyBeans store modules the attack runner needs: the static set runs the seeded store;
+ *  a dynamically-imported set (from a patched source tree) runs the AI's fix under the same checks. */
+type StoreMod = {
+  createApp: typeof createApp;
+  CATALOG: typeof CATALOG;
+  openDb: typeof openDb;
+  parseFlags: typeof parseFlags;
+  createPayPal: typeof createPayPal;
+};
+const STATIC_MOD: StoreMod = { createApp, CATALOG, openDb, parseFlags, createPayPal };
 
 const HOST = "https://api-m.sandbox.paypal.com";
 const PROBE = "0123456789abcdef-probe";
@@ -31,18 +46,38 @@ export const OFFLINE_ATTACKS: AttackId[] = ["A1", "A2", "A5", "A6", "A7", "A8"];
  * webhook disturbance, then runs the real checker. `bugs` selects the seeded bug variant ("" = fixed store).
  */
 export async function runOffline(attackId: AttackId, bugs: string): Promise<{ verdicts: Verdict[]; failed: string[] }> {
+  return runAttackWith(STATIC_MOD, attackId, bugs);
+}
+
+/**
+ * Proves (or disproves) an AI fix: renders the seeded store, overlays the model's patched files, runs that patched
+ * store through the *same* attack and the *same* checker. `verified` iff every invariant of the attack passes.
+ * `patched` maps store-relative paths (e.g. "src/routes/webhooks.ts") to the full patched file contents.
+ */
+export async function verifyOffline(attackId: AttackId, bugs: string, patched: Record<string, string>): Promise<{ verdicts: Verdict[]; failed: string[]; verified: boolean }> {
+  const dir = materializePatchedStore(bugs, patched);
+  try {
+    const mod = await importStore(dir);
+    const { verdicts, failed } = await runAttackWith(mod, attackId, bugs);
+    return { verdicts, failed, verified: failed.length === 0 };
+  } finally {
+    rmSync(dirname(dir), { recursive: true, force: true });
+  }
+}
+
+async function runAttackWith(mod: StoreMod, attackId: AttackId, bugs: string): Promise<{ verdicts: Verdict[]; failed: string[] }> {
   const fake = createFakePayPal({ webhookLatencyMs: 2 });
-  const flags = parseFlags(bugs);
-  const db = openDb(":memory:", flags);
-  const store = createApp({
+  const flags = mod.parseFlags(bugs);
+  const db = mod.openDb(":memory:", flags);
+  const store = mod.createApp({
     db,
-    paypal: createPayPal({ base: HOST, clientId: "id", secret: "secret", fetch: captureHeaderFetch(attackId, fake) }),
+    paypal: mod.createPayPal({ base: HOST, clientId: "id", secret: "secret", fetch: captureHeaderFetch(attackId, fake) }),
     flags,
     clientId: "id",
     webhookId: fake.webhookId,
     probeToken: PROBE,
     base: "",
-    catalog: CATALOG,
+    catalog: mod.CATALOG,
   });
   const storeSrv = await listen(store);
 
@@ -80,6 +115,31 @@ function captureHeaderFetch(attackId: AttackId, fake: FakePayPal): typeof fetch 
     }
     return fake.fetch(input, init);
   };
+}
+
+/** Store files rendered into the patched tree, relative to BuggyBeans' src/ (patch keys are "src/<rel>"). */
+const STORE_FILES = ["app.ts", "db.ts", "env.ts", "paypal.ts", "routes/orders.ts", "routes/webhooks.ts", "routes/probe.ts", "routes/pages.ts"];
+
+/** Write a full BuggyBeans src tree rendered with the seeded bugs, overlaying the model's patched files, and
+ *  return its src dir. Placed inside the package so bare imports (express, zod) resolve; caller removes the root. */
+function materializePatchedStore(bugs: string, patched: Record<string, string>): string {
+  const srcDir = dirname(fileURLToPath(import.meta.resolve("buggybeans/src/app.ts")));
+  const active = parseBugList(bugs);
+  const root = mkdtempSync(join(srcDir, "..", ".fl-verify-"));
+  const outSrc = join(root, "src");
+  mkdirSync(join(outSrc, "routes"), { recursive: true });
+  for (const rel of STORE_FILES) {
+    const rendered = renderVariant(readFileSync(join(srcDir, rel), "utf8"), active);
+    writeFileSync(join(outSrc, rel), patched[`src/${rel}`] ?? rendered);
+  }
+  copyFileSync(join(srcDir, "catalog.json"), join(outSrc, "catalog.json"));
+  return outSrc;
+}
+
+async function importStore(srcDir: string): Promise<StoreMod> {
+  const href = (rel: string) => pathToFileURL(join(srcDir, rel)).href;
+  const [app, dbm, env, pp] = await Promise.all([import(href("app.ts")), import(href("db.ts")), import(href("env.ts")), import(href("paypal.ts"))]);
+  return { createApp: app.createApp, CATALOG: app.CATALOG, openDb: dbm.openDb, parseFlags: env.parseFlags, createPayPal: pp.createPayPal };
 }
 
 function ruleFor(attackId: AttackId): WebhookRule {

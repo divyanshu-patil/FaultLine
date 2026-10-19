@@ -1,6 +1,6 @@
 import { applyPatch, changedLineCount, guardPatch, parseUnifiedDiff } from "@faultline/patch";
 import { getAttack, EXPECTED_MATRIX } from "@faultline/core";
-import { OFFLINE_ATTACKS, runOffline } from "@faultline/engine";
+import { OFFLINE_ATTACKS, runOffline, verifyOffline } from "@faultline/engine";
 import type { Db } from "@faultline/db";
 import type { AttackId, Verdict } from "@faultline/schemas";
 import { diagnose, proposePatch, recon, withAttacks, type Ollama } from "@faultline/agent";
@@ -80,20 +80,31 @@ export async function executeRun(runId: string, deps: Deps): Promise<void> {
     const affectedPaths = promptFiles.map((f) => f.path);
     const diff = await proposePatch(deps.ollama, { diagnosis: (acc.diagnosis as { body?: { root_cause?: string } } | null)?.body?.root_cause ?? acc.title, files: promptFiles });
     const guard = guardPatch(diff, source.files, affectedPaths);
-    let status = guard.passed ? "proposed" : "rejected";
+    // status progresses: rejected (guard) → build_failed (apply) → verified | not_fixed (same attack re-run on the patched store)
+    let status: "rejected" | "build_failed" | "verified" | "not_fixed" = "rejected";
     let applied = false;
+    let verdicts: Verdict[] | null = null;
     if (guard.passed) {
+      status = "build_failed";
       try {
         const patches = parseUnifiedDiff(diff);
-        applyPatch(source.files, patches);
+        const patchedFiles = applyPatch(source.files, patches);
         applied = changedLineCount(patches) > 0;
-      } catch {
-        status = "rejected";
+        if (applied) {
+          // Prove the fix: re-run the SAME attack on a fresh store built from the patched source, same checker.
+          const result = await verifyOffline(acc.attackId as AttackId, bugs, patchedFiles);
+          verdicts = result.verdicts;
+          status = result.verified ? "verified" : "not_fixed";
+        }
+      } catch (err) {
+        await emit("info", { summary: `${acc.attackId} patch did not apply or verify: ${(err as Error).message}` });
       }
     }
-    const patchId = await db.addPatch({ findingId, attempt: 1, source: "model", diff, guard, build: { passed: applied }, status });
-    acc.patch = { attempt: 1, source: "model", diff, guard, build: { passed: applied }, status, verdicts: null, label: "AI patch (proposed, not re-run)" };
-    await db.updatePatch(patchId, { status });
+    const label = status === "verified" ? "AI patch (verified by re-run)" : status === "not_fixed" ? "AI patch (re-run, did not fix)" : "AI patch (rejected)";
+    const build = { passed: applied };
+    const patchId = await db.addPatch({ findingId, attempt: 1, source: "model", diff, guard, build, status });
+    acc.patch = { attempt: 1, source: "model", diff, guard, build, status, verdicts, label };
+    await db.updatePatch(patchId, { status, verdicts });
     await emit("patch", { attackId: acc.attackId, status, source: "model" });
     return `${acc.attackId} patch ${status} (guard ${guard.passed ? "passed" : "failed"})`;
   };
@@ -151,7 +162,7 @@ export async function executeRun(runId: string, deps: Deps): Promise<void> {
   // --- report ---
   await emit("phase", { phase: "reporting" });
   const slug = `run-${runId.slice(0, 8)}`;
-  const aiFixed = 0; // patches are proposed, not re-run in the simulated worker
+  const aiFixed = findings.filter((f) => (f.patch as { status?: string } | null)?.status === "verified").length;
   const body = {
     slug,
     target: { name: target.name, slug: target.slug },

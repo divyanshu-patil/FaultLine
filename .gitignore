@@ -44,3 +44,6 @@ eval/results/*.raw.json
 playwright-report/
 test-results/
 eval/results/*.json
+
+# transient patched-store trees from engine patch verification
+**/.fl-verify-*/
