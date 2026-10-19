@@ -69,8 +69,18 @@ pnpm seed:demo                     # a worked-example report to browse
 
 # API (FastAPI) — in apps/api
 python3 -m venv .venv && . .venv/bin/activate && pip install -e ".[dev]" && python run.py
+# worker (claims run jobs, drives the attacks) — in another shell
+pnpm --filter worker dev
 # web — in another shell
-pnpm --filter web dev              # http://localhost:3000
+pnpm --filter web dev              # http://localhost:3000 — sign in with ACCESS_CODES, then start a run
+```
+
+The worker runs attacks on the offline engine (`PAYPAL_BACKEND=simulated`), so a run works without live buyer approval; those runs are labelled *simulated PayPal backend* everywhere. The live-sandbox path additionally needs a buyer-approval strategy and the two operator hooks below.
+
+Check the whole detector offline, buggy store vs fixed, against the expected matrix:
+
+```bash
+pnpm eval:bugs                     # 6/6 attacks (A3, A4 need operator hooks)
 ```
 
 Tests: `pnpm test` (TypeScript packages) and `pnpm test:api` (FastAPI).
